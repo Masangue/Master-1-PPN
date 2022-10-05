@@ -1,12 +1,14 @@
-__Commentaires :__
-    - En anglais
-    - Au format :
-        `/*
-            Description de la
-            fonction
-
-            @param in : 
-            @param out : 
-
-            @return :
-        */`
+# Commentaires 
+- En anglais
+- Au format :
+```
+/*
+	Description de
+	la focntion
+			
+	@param in
+	@param out
+				
+	@return
+*/ 
+```
