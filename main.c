@@ -19,11 +19,13 @@ k iterate through the Outputs
 #include <stdlib.h>
 
 
+
 // types
 typedef double f64;
 typedef unsigned int u32;
 typedef unsigned long long u64;
 
+#define MAX_LAYER 50
 
 // activations functions
 f64 sigmoid(f64 x) {
@@ -45,29 +47,49 @@ int main(int argc, char *argv[])
     
     f64 eta = 0.5;
     f64 alpha = 0.3;
+
     // size
     u64 n_inputs  = 3;
-    u64 n_hidden  = 6;
+    u64 layer_hidden = 2;
+    u64 list_n_hidden [ MAX_LAYER ] = {6,4};
     u64 n_outputs = 1;
 
     f64 * neurons_inputs  = aligned_alloc(64, n_inputs * sizeof(f64) );
-    f64 * neurons_hiddens = aligned_alloc(64, n_hidden * sizeof(f64) );
+    f64 ** neurons_hiddens = aligned_alloc(64, layer_hidden * sizeof(f64 *) );
+    for( u64 i = 0; i < layer_hidden; i++ )
+        neurons_hiddens[i] = aligned_alloc(64, list_n_hidden[i] * sizeof(f64));
     f64 * neurons_outputs = aligned_alloc(64, n_outputs * sizeof(f64) );
     f64 * expected        = aligned_alloc(64, n_outputs * sizeof(f64) );
      
-    f64 * weightsIH   = aligned_alloc(64, n_inputs  * n_hidden  *  sizeof(f64) );
-    f64 * weightsHO   = aligned_alloc(64, n_hidden  * n_outputs *  sizeof(f64) );
-    f64 * biasIH      = aligned_alloc(64, n_inputs  * n_hidden  *  sizeof(f64) );
-    f64 * biasHO      = aligned_alloc(64, n_hidden  * n_outputs *  sizeof(f64) );
+    f64 * weightsIH   = aligned_alloc(64, n_inputs  * list_n_hidden[ 0 ]  *  sizeof(f64) );
+    f64 ** weightsHH   = aligned_alloc(64, (layer_hidden-1)  *  sizeof(f64*) );
+    for( u64 i = 0; i < layer_hidden - 1; i++ )
+        weightsHH[i] = aligned_alloc(64, list_n_hidden[i] * list_n_hidden[i+1] * sizeof(f64));
+    f64 * weightsHO   = aligned_alloc(64, list_n_hidden[layer_hidden - 1]  * n_outputs *  sizeof(f64) );
+    f64 * biasIH      = aligned_alloc(64, list_n_hidden[ 0 ]  *  sizeof(f64) );
+    f64 ** biasHH      = aligned_alloc(64, (layer_hidden-1)  *  sizeof(f64*) );
+    for( u64 i = 0; i < layer_hidden - 1; i++ )
+        biasHH[i]     = aligned_alloc(64, list_n_hidden[i + 1]  *  sizeof(f64) );
+    f64 * biasHO      = aligned_alloc(64, n_outputs *  sizeof(f64) );
     
     // f64 * delta_inputs  = malloc( n_inputs * sizeof(f64) );
-    f64 * delta_hiddens = aligned_alloc(64, n_hidden * sizeof(f64) );
+    f64 ** delta_hiddens = aligned_alloc(64, layer_hidden * sizeof(f64*) );
+    for( u64 i = 0; i < layer_hidden; i++ )
+        delta_hiddens[i] = aligned_alloc(64, list_n_hidden[i] * sizeof(f64));
+ 
     f64 * delta_outputs = aligned_alloc(64, n_outputs * sizeof(f64) );
     
-    f64 * deltaWeightsIH   = aligned_alloc(64, n_inputs  * n_hidden  *  sizeof(f64) );
-    f64 * deltaWeightsHO   = aligned_alloc(64, n_hidden  * n_outputs *  sizeof(f64) );
-    f64 * deltaBiasIH      = aligned_alloc(64, n_inputs  * n_hidden  *  sizeof(f64) );
-    f64 * deltaBiasHO      = aligned_alloc(64, n_hidden  * n_outputs *  sizeof(f64) );
+    f64 * deltaWeightsIH   = aligned_alloc(64, n_inputs  * list_n_hidden[ 0 ]  *  sizeof(f64) );
+    f64 ** deltaWeightsHH   = aligned_alloc(64, (layer_hidden-1)  *  sizeof(f64*) );
+    for( u64 i = 0; i < layer_hidden - 1; i++ )
+        deltaWeightsHH[i]   = aligned_alloc(64, list_n_hidden[i] * list_n_hidden[i + 1]  *  sizeof(f64*) );
+
+    f64 * deltaWeightsHO   = aligned_alloc(64, list_n_hidden[layer_hidden - 1]  * n_outputs *  sizeof(f64) );
+    f64 * deltaBiasIH      = aligned_alloc(64, list_n_hidden[ 0 ]  *  sizeof(f64) );
+    f64 ** deltaBiasHH      = aligned_alloc(64, (layer_hidden-1)  *  sizeof(f64*) );
+    for( u64 i = 0; i < layer_hidden - 1; i++ )
+        deltaBiasHH[i]   = aligned_alloc(64, list_n_hidden[i + 1]  *  sizeof(f64*) );
+    f64 * deltaBiasHO      = aligned_alloc(64, n_outputs *  sizeof(f64) );
     
 
     // f64 * bias_inputs  = malloc( n_inputs * sizeof(f64) );
@@ -76,8 +98,11 @@ int main(int argc, char *argv[])
     
    
     f64 s = 0;
+    u64 n_hidden = 0;
 
     // inititialisation with random weights (for now)
+
+    n_hidden = list_n_hidden[0];
     for( u64 j = 0; j < n_hidden; j++ ){
         biasIH[j]      = ((f64) rand() / (f64)RAND_MAX) - 0.5;
         deltaBiasIH[j] = 0.0f;
@@ -87,6 +112,21 @@ int main(int argc, char *argv[])
         }   
     }
     
+    for( u64 l = 0; l < layer_hidden - 1; l++ ){
+        u64 n_hidden1 = list_n_hidden[l];
+        u64 n_hidden2 = list_n_hidden[l+1];
+
+        for( u64 j2 = 0; j2 < n_hidden2; j2++ ){
+            biasHH[l][j2]      = ((f64) rand() / (f64)RAND_MAX) - 0.5;
+            deltaBiasHH[l][j2] = 0.0f;
+            for( u64 j1 = 0; j1 < n_hidden1 ; j1++ ){
+                weightsHH[l][j2 * n_hidden1 + j1] = ((f64) rand() / (f64)RAND_MAX) - 0.5;
+                deltaWeightsHH[l][j2 * n_hidden1 + j1] = 0.0f;
+            }   
+        }
+    }
+
+    n_hidden = list_n_hidden[ layer_hidden - 1 ];
     for( u64 k = 0; k < n_outputs; k++ ){
         biasHO[k]      = ((f64) rand() / (f64)RAND_MAX) - 0.5;
         deltaBiasHO[k] = 0.0f;
@@ -139,22 +179,37 @@ int main(int argc, char *argv[])
         // getchar();
 
         // compute input -> hidden
+        n_hidden = list_n_hidden[0];
         for( u64 j = 0; j < n_hidden; j++ ){
             s = biasIH[j];
             //fma
             for( u64 i = 0; i < n_inputs ; i++ ){
                 s += neurons_inputs[i] * weightsIH[ j * n_inputs + i ];
             }
-            neurons_hiddens[j] = sigmoid(s);
+            neurons_hiddens[0][j] = sigmoid(s);
         }
         
+        for( u64 l = 0; l < layer_hidden - 1; l++ ){
+            u64 n_hidden1 = list_n_hidden[l];
+            u64 n_hidden2 = list_n_hidden[l+1];
+
+            for( u64 j2 = 0; j2 < n_hidden2; j2++ ){
+                s = biasHH[l][j2];
+                //fma
+                for( u64 j1 = 0; j1 < n_hidden1 ; j1++ ){
+                    s += neurons_hiddens[l][j1] * weightsHH[l][ j2 * n_hidden1 + j1 ];
+                }
+                neurons_hiddens[l+1][j2] = sigmoid(s);
+            }
+        }   
 
         // compute hidden -> outputs  & errors 
         err = 0.0f;
+        n_hidden = list_n_hidden[ layer_hidden - 1];
         for( u64 k = 0; k < n_outputs; k++ ){
             s = biasHO[k];
             for( u64 j = 0; j < n_hidden; j++ ){
-                s += neurons_hiddens[j] * weightsHO[ k * n_hidden + j ];
+                s += neurons_hiddens[ layer_hidden - 1 ][j] * weightsHO[ k * n_hidden + j ];
             }
             neurons_outputs[k] = sigmoid(s);
 
@@ -177,32 +232,67 @@ int main(int argc, char *argv[])
             // getchar();
         }
 
-        // delta hidden
+        // delta hidden -> ouput
         // /!\ parcours par colonne /!\ //
+        n_hidden = list_n_hidden[ layer_hidden - 1];
         for( u64 j = 0; j < n_hidden; j++ ){
             s = 0.0;
             for( u64 k = 0; k < n_outputs; k++ ){
                 s += weightsHO[k * n_hidden + j] * delta_outputs[k];
             }
-            delta_hiddens[j] = s * d_sigmoid( neurons_hiddens[j] ) ;
+            // printf("%lld %lld \n", layer_hidden - 1, j);
+            f64 tmp = s * d_sigmoid( neurons_hiddens[layer_hidden - 1][j] ) ;
+            delta_hiddens[layer_hidden - 1][j] = tmp;
+        }
+        
+        // delta hidden -> hidden
+        for( u64 l = layer_hidden - 1; l > 0; l--){
+            u64 n_hidden2 = list_n_hidden[l];
+            u64 n_hidden1 = list_n_hidden[l-1];
+            for( u64 j1 = 0; j1 < n_hidden1; j1++ ){
+                s = 0.0;
+                for( u64 j2 = 0; j2 < n_hidden2; j2++ ){
+                    s += weightsHH[l-1][j2 * n_hidden1 + j1] * delta_hiddens[l][j2];
+                }
+                // printf("%lld %lld \n", layer_hidden - 1, j);
+                delta_hiddens[l - 1][j1] = s * d_sigmoid( neurons_hiddens[l - 1][j1] ) ;
+            }
         }
 
-        // backpropagate        
+        // backpropagate        input ->hidden
+        n_hidden = list_n_hidden[ 0 ];
         for( u64 j = 0; j < n_hidden; j++){
-            deltaBiasIH[j] = eta * delta_hiddens[j] + alpha * deltaBiasIH[j];
+            deltaBiasIH[j] = eta * delta_hiddens[0][j] + alpha * deltaBiasIH[j];
             biasIH[j] += deltaBiasIH[j];
             for( u64 i = 0; i < n_inputs; i++){
-                deltaWeightsIH[j * n_inputs + i] = eta * neurons_inputs[i] * delta_hiddens[j] + 
+                deltaWeightsIH[j * n_inputs + i] = eta * neurons_inputs[i] * delta_hiddens[0][j] + 
                                                    alpha * deltaWeightsIH[ j * n_inputs + i];
                 weightsIH[ j * n_inputs + i] += deltaWeightsIH[j * n_inputs + i];
             }
         }
         
+        //hiden -> hidden 
+        for( u64 l = 0; l < layer_hidden - 1; l++){
+            u64 n_hidden1 = list_n_hidden[ l ];
+            u64 n_hidden2 = list_n_hidden[ l+1 ];
+            for( u64 j2 = 0; j2 < n_hidden2; j2++){
+                deltaBiasHH[l][j2] = eta * delta_hiddens[l+1][j2] + alpha * deltaBiasHH[l][j2];
+                biasHH[l][j2] += deltaBiasHH[l][j2];
+                for( u64 j1 = 0; j1 < n_hidden1; j1++){
+                    deltaWeightsHH[l][j2 * n_hidden1 + j1] = eta * neurons_hiddens[l][j1] * delta_hiddens[l+1][j2] + 
+                                                       alpha * deltaWeightsHH[l][ j2 * n_hidden1 + j1];
+                    weightsHH[l][ j2 * n_hidden1 + j1] += deltaWeightsHH[l][j2 * n_hidden1 + j1];
+                }
+            }
+        }
+        
+        //hidden -> output
+        n_hidden = list_n_hidden[ layer_hidden - 1 ];
         for( u64 k = 0; k < n_outputs; k++){
             deltaBiasHO[k] = eta * delta_outputs[k] + alpha * deltaBiasHO[k];
             biasHO[k] += deltaBiasHO[k];
             for( u64 j = 0; j < n_hidden; j++){
-                deltaWeightsHO[k * n_hidden + j] = eta * neurons_hiddens[j] * delta_outputs[k] + 
+                deltaWeightsHO[k * n_hidden + j] = eta * neurons_hiddens[layer_hidden - 1][j] * delta_outputs[k] + 
                                                    alpha * deltaWeightsHO[ k * n_hidden + j];
                 weightsHO[ k * n_hidden + j] += deltaWeightsHO[k * n_hidden + j];
             }
