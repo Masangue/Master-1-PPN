@@ -19,10 +19,8 @@ k iterate through the Outputs
 #include <stdlib.h>
 
 
-// types
-typedef double f64;
-typedef unsigned int u32;
-typedef unsigned long long u64;
+#include "type.h"
+
 
 
 // activations functions
@@ -33,8 +31,6 @@ f64 sigmoid(f64 x) {
 f64 d_sigmoid(f64 x) {
     return x * (1 - x);
 }
-
-
 
 int main(int argc, char *argv[])
 {
