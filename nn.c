@@ -13,7 +13,9 @@ f64 d_sigmoid(f64 x) {
 Layer * createLayer( u64 size, u64 next_size ){
     Layer * layer;
     layer = aligned_alloc(64, size * sizeof(Layer) );
-    layer->neurons       = aligned_alloc(64, size *             sizeof(Layer) );
+    layer->size = size;
+
+    layer->neurons       = aligned_alloc(64, size *             sizeof(f64) );
     layer->weights       = aligned_alloc(64, size * next_size * sizeof(f64) );
     layer->bias          = aligned_alloc(64, next_size *        sizeof(f64) );
 
@@ -47,7 +49,7 @@ void computeLayer( Layer * layer1, Layer * layer2 ){
             for( u64 i = 0; i < size ; i++ ){
                 s += layer1->neurons[i] * layer1->weights[ j * size + i ];
             }
-            layer1->neurons[j] = sigmoid(s);
+            layer2->neurons[j] = sigmoid(s);
         }
      
 }
@@ -75,7 +77,7 @@ void computeDelta( Layer * layer1, Layer * layer2 ){
     for( u64 i = 0; i < size; i++ ){
         s = 0.0;
         for( u64 j = 0; j < next_size; j++ ){
-            s += layer2->weights[j * size + i] * layer2->delta_neurons[j];
+            s += layer1->weights[j * size + i] * layer2->delta_neurons[j];
         }
         layer1->delta_neurons[i] = s * d_sigmoid( layer1->neurons[i] ) ;
     }
@@ -83,21 +85,50 @@ void computeDelta( Layer * layer1, Layer * layer2 ){
 }
 
 
-void Backpropagate( Layer * layer1, Layer * layer2 ){
+void backpropagate( Layer * layer1, Layer * layer2 ){
     
     u64 size = layer1->size;
     u64 next_size = layer2->size;
     
-    for( u64 j = 0; j < size; j++){
-        layer2->delta_bias[j] = eta * layer2->delta_neurons[j] + alpha * layer2->delta_bias[j];
-        layer2->bias[j] += layer2->delta_bias[j];
-        for( u64 i = 0; i < next_size; i++){
+    for( u64 j = 0; j < next_size; j++){
+        layer1->delta_bias[j] = eta * layer2->delta_neurons[j] + alpha * layer1->delta_bias[j];
+        layer1->bias[j] += layer1->delta_bias[j];
+        for( u64 i = 0; i < size; i++){
             layer1->delta_weights[j * size + i] = eta * layer1->neurons[i] * layer2->delta_neurons[j] + 
-                                                  alpha * layer1->weights[j * size + i];
+                                                  alpha * layer1->delta_weights[j * size + i];
             layer1->weights[ j * size + i] += layer1->delta_weights[j * size + i];
         }
     }
 }
 
+void debug( Layer * layer, u64 next_size ){
+    printf("\n\n");
+    printf("neurons : \n");
+    for( u64 i = 0; i < layer->size; i++)
+        printf("%lf \n", layer->neurons[i]);
+    
+    // printf("\n\n");
+    // printf("weights : \n");
+    // for( u64 j = 0; j < next_size; j++){
+    //     for( u64 i = 0; i < layer->size; i++){
+    //         printf("%lf \n", layer->weights[ j * layer->size + i]);
+    //     }
+    // }
+    
+    printf("\n\n");
+    printf("delta weights : \n");
+    for( u64 j = 0; j < next_size; j++){
+        for( u64 i = 0; i < layer->size; i++){
+            printf("%lf \n", layer->delta_weights[ j * layer->size + i]);
+        }
+    }
+
+    // printf("\n\n");
+    // printf("delta neurons : \n");
+    // for( u64 i = 0; i < layer->size; i++)
+    //     printf("%lf \n", layer->delta_neurons[i]);
+    
+
+}
 
 

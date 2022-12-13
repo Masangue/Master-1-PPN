@@ -6,8 +6,8 @@
 
 #include "type.h"
 
-#define alpha 0.9
-#define eta 0.2
+#define eta 0.5
+#define alpha 0.3
 
 typedef struct {
     u64 size;
@@ -27,7 +27,8 @@ void    initLayer( Layer * layer, u64 next_size );
 void    computeLayer( Layer * layer1, Layer * layer2 );
 f64     computeOutputDelta( Layer * layer, f64 * expected );
 void    computeDelta( Layer * layer1, Layer * layer2 );
-void    Backpropagate( Layer * layer1, Layer * layer2 );
+void    backpropagate( Layer * layer1, Layer * layer2 );
+void    debug( Layer * layer, u64 next_size );
 
 
 // activations functions
