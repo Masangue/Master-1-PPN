@@ -7,7 +7,7 @@ main: main.c
 	$(CC) -o $@ $< $(LDFLAGS)
 
 image_processing: image_processing.c
-	$(CC) -o $@ $< -L. -lspng
+	$(CC) -o $@ $< -I./lib/ -L./lib/ -lspng 
 
 clean:
 	rm -f main image_processing *.o
