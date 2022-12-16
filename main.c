@@ -8,6 +8,9 @@ https://github.com/yaspr/nn
 
 this NN will predict if the result of an addition (between two number between 0 and 10 ) is true.
 
+i iterate through the Inputs
+j iterate through the Hiddens
+k iterate through the Outputs
 */
 
 #include <time.h>
@@ -16,65 +19,35 @@ this NN will predict if the result of an addition (between two number between 0 
 #include <stdlib.h>
 
 
-// types
-typedef double f64;
-typedef unsigned int u32;
-typedef unsigned long long u64;
+#include "type.h"
+#include "nn.h"
 
-
-// activations functions
-f64 sigmoid(f64 x) {
-    return 1 / (1 + exp(-x) );
-}
-
-f64 d_sigmoid(f64 x) {
-    return x * (1 - x);
-}
-
-
+#define NB_MAX_LAYER   50
+#define NB_MAX_OUTPUTS 50
 
 int main(int argc, char *argv[])
 {
     printf(" id ; err\n");
     srand(time(NULL));
-   
-    // size
-    u64 n_inputs  = 3;
-    u64 n_hidden  = 6;
-    u64 n_outputs = 1;
+    
+    f64 cumul_err = 0.0f;
 
-    f64 * neurons_inputs  = aligned_alloc(64, n_inputs * sizeof(f64) );
-    f64 * neurons_hiddens = aligned_alloc(64, n_hidden * sizeof(f64) );
-    f64 * neurons_outputs = aligned_alloc(64, n_outputs * sizeof(f64) );
-    
-    // f64 * delta_inputs  = malloc( n_inputs * sizeof(f64) );
-    f64 * delta_hiddens = aligned_alloc(64, n_hidden * sizeof(f64) );
-    f64 * delta_outputs = aligned_alloc(64, n_outputs * sizeof(f64) );
- 
+    u64 nb_layers = 4;
+    u64 neurons_per_layers[NB_MAX_LAYER] = {3,6,4,1,1};
+    Layer ** layers = malloc( nb_layers * sizeof(Layer *) );
 
-    // f64 * bias_inputs  = malloc( n_inputs * sizeof(f64) );
-    // f64 * bias_hiddens = malloc( n_hidden * sizeof(f64) );
-    // f64 * bias_outputs = malloc( n_outputs * sizeof(f64) );
-    
-    f64 * weights_i_2_h   = aligned_alloc(64, n_inputs * n_hidden  *  sizeof(f64) );
-    f64 * weights_h_2_o   = aligned_alloc(64, n_hidden * n_outputs *  sizeof(f64) );
-    
-    f64 s = 0;
+    f64 expected[NB_MAX_OUTPUTS];
 
-    // init random weights
-    for( u64 i = 0; i < n_inputs; i++ ){
-        for( u64 j = 0; j < n_hidden; j++ ){
-            weights_i_2_h[i * n_hidden + j] = (f64) rand() / (f64)RAND_MAX;
-        }   
-    }
-    
-    for( u64 i = 0; i < n_hidden; i++ ){
-        for( u64 j = 0; j < n_outputs; j++ ){
-            weights_i_2_h[i * n_outputs + j] = (f64) rand() / (f64)RAND_MAX;
-        }   
+    for(u64 i = 0; i < nb_layers; i++){
+        layers[i] = createLayer( neurons_per_layers[i], neurons_per_layers[i+1]);
+        // printf("%lld, %x\n", i, layers[i] );
     }
 
-   //train
+
+    for(u64 i = 0; i < nb_layers - 1; i++){
+        initLayer( layers[i], neurons_per_layers[i+1] );
+    }
+
     u64 train_id = 0;
     while( train_id < 4000000){
         
@@ -82,14 +55,13 @@ int main(int argc, char *argv[])
         int a = rand() % 10 ; // random betwenn 0 and 10 
         int b = rand() % 10 ; // random betwenn 0 and 10 
         int c = 0.0;
-        f64 expected = 0.0;
         f64 err = 0.0; 
 
         
         // setting inputs and expected output
         if( ( (f64) rand() / (f64) RAND_MAX )  > 0.5 ){
             c = a + b;
-            expected = 1.0;
+            expected[0] = 1.0;
               
         }
         else{
@@ -97,88 +69,64 @@ int main(int argc, char *argv[])
                 c = rand() % 19 ; // random betwenn 0 and 10 
                 }
             while(c == a + b);
-            expected = 0.0;
+            expected[0] = 0.0;
         }
         
-        // printf("a : %d\n", a);
-        // printf("b : %d\n", b);
-        // printf("c : %d\n", c);
-        // printf("exepected : %f\n", expected);
-        //
         
         //reduce each numbers to a value between -4 and 4, and use activation function on it.
-        neurons_inputs[0] = sigmoid( ((f64) a - 4.5) / 2 );
-        neurons_inputs[1] = sigmoid( ((f64) b - 4.5) / 2 );
-        neurons_inputs[2] = sigmoid( ((f64) c - 9) / 4 );
+        layers[0]->neurons[0] = sigmoid( ((f64) a - 4.5) / 2 );
+        layers[0]->neurons[1] = sigmoid( ((f64) b - 4.5) / 2 );
+        layers[0]->neurons[2] = sigmoid( ((f64) c - 9) / 4 );
 
-        // printf("a : %f\n", neurons_inputs[0]);         
-        // printf("b : %f\n", neurons_inputs[1]);         
-        // printf("c : %f\n\n\n", neurons_inputs[2]);         
-        //
-        // getchar();
+        
+        // compute
+        for(u64 i = 0; i < nb_layers - 1; i++){
+            computeLayer( layers[i], layers[i+1] );
+        }
+        
+        //delta
+        err = computeOutputDelta( layers[nb_layers - 1] , expected );
 
-        // compute input -> hidden
-        for( u64 i = 0; i < n_hidden; i++ ){
-            
-            s = 0.0;
-            //fma
-            for( u64 j = 0; j < n_inputs; j++ ){
-                s += neurons_inputs[j] * weights_i_2_h[ i * n_inputs + j ];
-            }
-            neurons_hiddens[i] = sigmoid(s);
-        }
-    
-        // compute hidden -> outputs
-        for( u64 i = 0; i < n_outputs; i++ ){
-            
-            s = 0.0;
-            for( u64 j = 0; j < n_hidden; j++ ){
-                s += neurons_hiddens[j] * weights_h_2_o[ i * n_hidden + j ];
-            }
-            neurons_outputs[i] = sigmoid(s);
-        }
+        cumul_err += err;
+
 
         //error
-        err = fabs( neurons_outputs[0] - expected );
-
-        // if( train_id % 1000000 == 0){
-        //     printf(" hello there\n");
-        //     printf(" train_id : %llu; err : %lf\n", train_id, err);
-        //     getchar();
-        // }
-       if( train_id % 1000 == 0){
-            // printf(" hello there\n");
-            // printf(" train_id : %llu; err : %lf\n", train_id, err);
-            printf(" %llu; %lf\n", train_id, err);
+        if( train_id % 1000 == 0){
+        // if( 1 == 1){
+            printf(" %llu; %lf\n", train_id, cumul_err/1000);
+            cumul_err = 0;
             // getchar();
         }
 
-
-        
-        
-        // delta output
-        delta_outputs[0] = ( neurons_outputs[0] - expected ) * d_sigmoid( neurons_outputs[0] );
-        
-        // delta hidden
-        f64 _c_ = delta_outputs[0];
-        for( u64 i = 0; i < n_hidden; i++ ){
-            delta_hiddens[i] = _c_ * weights_h_2_o[ 0 * n_hidden + i] * d_sigmoid( neurons_hiddens[i] ) ;
+        for(u64 i = nb_layers - 2; i > 0; i--){
+            // printf("%lld %lld\n", i, i+1);
+            computeDelta( layers[i], layers[i+1] );
         }
 
-        // backpropagate        
-        for( u64 i = 0; i < n_hidden; i++){
-            for( u64 j = 0; j < n_inputs; j++){
-                weights_i_2_h[i * n_inputs + j] -= 0.5 * neurons_inputs[j] * delta_hiddens[i];
+        for(u64 i = 0; i < nb_layers - 1; i++){
+            backpropagate( layers[i], layers[i+1] );
+        }
+       
+
+
+        continue;
+
+        printf("####################################\n");
+        for(u64 i = 0; i < nb_layers; i++){
+            u64 nextsize;
+            if( i < nb_layers - 1){
+                nextsize = layers[i+1]->size;
             }
+            else{
+                nextsize = 0;
+            }
+            printf("i: %lld\n", i);
+            debug( layers[i], nextsize );
         }
 
-        for( u64 i = 0; i < n_hidden; i++){
-            weights_h_2_o[0 * n_hidden + i] -= 0.5 * neurons_hiddens[i] * delta_outputs[0];
-        }
-    
-    }
-     
+        getchar();
 
+    } 
 
-    return 0;
 }
+
