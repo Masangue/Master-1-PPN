@@ -62,6 +62,16 @@ void max_pool_2X2_reduced_size(int * conv_image, size_t height, size_t width, in
     }
 }
 
+void rgb_to_grey( unsigned char * image, unsigned char * image_grayscale, size_t grayscale_size  ) {
+    for (size_t i = 0; i < grayscale_size; i++) {
+        // classic method
+        image_grayscale[i] = (image[i*3] + image[i*3+1] + image[i*3+2])/3;
+
+        // weighted method
+        // image_grayscale[i] = (image[i*3]*0.2126 + image[i*3+1]*0.7152 + image[i*3+2]*0.0722);
+    }
+}
+
 int process_img(char *img, unsigned char * image, size_t * image_size, size_t * image_width, size_t * image_height  ) {
     FILE *png;
     int ret = 0;
@@ -180,12 +190,13 @@ int process_img(char *img, unsigned char * image, size_t * image_size, size_t * 
 
 }
 
-int main(){
+unsigned char * prepare_image( char * filename ){
+
     unsigned char *image = NULL;
     size_t image_size, image_width, image_height;
 
 
-    process_img("image.png", image, &image_size, &image_width, &image_height);
+    process_img(filename, image, &image_size, &image_width, &image_height);
 
 
     // convert image to grayscale
@@ -194,28 +205,14 @@ int main(){
 
     if(image_grayscale == NULL) goto error2;
     
-    size_t grayscale_size = image_size/3;
-    size_t grayscale_width = image_width/3;
-    size_t grayscale_height = image_height;
+    image_size = image_size/3;
+    image_width = image_width/3;
+    image_height = image_height;
 
-    for (size_t i = 0; i < grayscale_size; i++) {
-        // classic method
-        image_grayscale[i] = (image[i*3] + image[i*3+1] + image[i*3+2])/3;
+    
+    rgb_to_grey( image, image_grayscale, image_size  );
 
-        // weighted method
-        // image_grayscale[i] = (image[i*3]*0.2126 + image[i*3+1]*0.7152 + image[i*3+2]*0.0722);
-    }
-
-
-    for (size_t i = 0; i < grayscale_size; i++) {
-        if (i%(grayscale_width) == 0) {
-            printf("\n");
-        }
-        printf("%3d ", image_grayscale[i]);
-    }
-    printf("\n");
-
-
+   
 
         
     /*  first convolution with a kernel filter :
@@ -224,84 +221,32 @@ int main(){
             1 0 1
     */
 
-    int * image_conv = malloc((grayscale_width-2) * (grayscale_height-2) * sizeof(int));
-
+    int * image_conv = malloc((image_width-2) * (image_height-2) * sizeof(int));
     if(image_conv == NULL) goto error2;
 
     int * kernel_filter = malloc(9 * sizeof(int));
-
     if(kernel_filter == NULL) goto error2;
+
 
     kernel_filter[0] = 1, kernel_filter[2] = 1, kernel_filter[4] = 1, kernel_filter[6] = 1, kernel_filter[8] = 1;
     kernel_filter[1] = 0, kernel_filter[3] = 0, kernel_filter[5] = 0, kernel_filter[7] = 0;
 
-    printf("\nkernel_filter : \n");
-    for (size_t i = 0; i < 9 ; i++) {
-        if (i%(3) == 0) {
-            printf("\n");
-        }
-        printf("%3d ", kernel_filter[i]);
-    }
-    printf("\n");
+       
+    convolution_3X3(image_grayscale, image_height, image_width, kernel_filter, 1, image_conv);
 
-    convolution_3X3(image_grayscale, grayscale_height, grayscale_width, kernel_filter, 1, image_conv);
-
-    printf("\nConvolution : \n");
-    for (size_t i = 0; i < (grayscale_width-2) * (grayscale_height-2); i++) {
-        if (i%(grayscale_width-2) == 0) {
-            printf("\n");
-        }
-        printf("%4d ", image_conv[i]);
-    }
-    printf("\n");
-        
-        
     
-    printf("\n");
-
-    // Max pooling 3X3
-
-    // int * image_pool = malloc((grayscale_width-2-2) * (grayscale_height-2-2) * sizeof(int));
-
-    // if(image_pool == NULL) goto error;
-
-    // max_pool_3X3(image_conv, (grayscale_height-2), (grayscale_width-2), image_pool);
-    
-    // printf("\nMax pool : \n");
-    // for (size_t i = 0; i < (grayscale_width-2-2) * (grayscale_height-2-2); i++) {
-    //     if (i%(grayscale_width-2-2) == 0) {
-    //         printf("\n");
-    //     }
-    //     printf("%4d ", image_pool[i]);
-    // }
-    // printf("\n");
-
-    // Max pooling 2X2
-
-    int * image_pool = malloc( ((grayscale_width-2)/2) * ((grayscale_height-2)/2) * sizeof(int));
-
+    int * image_pool = malloc( ((image_width-2)/2) * ((image_height-2)/2) * sizeof(int));
     if(image_pool == NULL) goto error2;
 
-    max_pool_2X2_reduced_size(image_conv, grayscale_height-2, grayscale_width-2, image_pool);
-    
-    printf("\nMax pool : \n");
-    for (size_t i = 0; i < ((grayscale_width-2)/2) * ((grayscale_height-2)/2); i++) {
-        if (i%((grayscale_width-2)/2) == 0) {
-            printf("\n");
-        }
-        printf("%4d ", image_pool[i]);
-    }
-    printf("\n");
+    max_pool_2X2_reduced_size(image_conv, image_height-2, image_width-2, image_pool);
+   
 
     // spng_ctx_free(ctx);
     free(image);
     free(image_grayscale);
     free(image_conv);
     free(kernel_filter);
-    // fclose(png);
-
-    // return image_pool;
-
+    return NULL;
 
     error2:
         free(image);
@@ -309,7 +254,130 @@ int main(){
         free(image_conv);
         free(image_pool);
         free(kernel_filter);
-        return -1;
+        return NULL;
+
 
 
 }
+
+// int main(){
+//     // unsigned char *image = NULL;
+//     // size_t image_size, image_width, image_height;
+//     //
+//     //
+//     // process_img("image.png", image, &image_size, &image_width, &image_height);
+//     //
+//     //
+//     // // convert image to grayscale
+//     //
+//     // unsigned char * image_grayscale = malloc(image_size/3 * sizeof(unsigned char));
+//     //
+//     // if(image_grayscale == NULL) goto error3;
+//     // 
+//     // image_size = image_size/3;
+//     // image_width = image_width/3;
+//     // image_height = image_height;
+//     //
+//     // 
+//     // rgb_to_grey( image, image_grayscale, image_size  );
+//     //
+//     // //
+//     // // for (size_t i = 0; i < image_size; i++) {
+//     // //     if (i%(image_width) == 0) {
+//     // //         printf("\n");
+//     // //     }
+//     // //     printf("%3d ", image_grayscale[i]);
+//     // // }
+//     // // printf("\n");
+//     //
+//     //
+//     //
+//     //     
+//     // /*  first convolution with a kernel filter :
+//     //         1 0 1
+//     //         0 1 0
+//     //         1 0 1
+//     // */
+//     //
+//     // int * image_conv = malloc((image_width-2) * (image_height-2) * sizeof(int));
+//     //
+//     // if(image_conv == NULL) goto error2;
+//     //
+//     // int * kernel_filter = malloc(9 * sizeof(int));
+//     //
+//     // if(kernel_filter == NULL) goto error2;
+//     //
+//     // kernel_filter[0] = 1, kernel_filter[2] = 1, kernel_filter[4] = 1, kernel_filter[6] = 1, kernel_filter[8] = 1;
+//     // kernel_filter[1] = 0, kernel_filter[3] = 0, kernel_filter[5] = 0, kernel_filter[7] = 0;
+//     //
+//     // // printf("\nkernel_filter : \n");
+//     // // for (size_t i = 0; i < 9 ; i++) {
+//     // //     if (i%(3) == 0) {
+//     // //         printf("\n");
+//     // //     }
+//     // //     printf("%3d ", kernel_filter[i]);
+//     // // }
+//     // // printf("\n");
+//     // //
+//     // convolution_3X3(image_grayscale, image_height, image_width, kernel_filter, 1, image_conv);
+//     //
+//     // // printf("\nConvolution : \n");
+//     // // for (size_t i = 0; i < (image_width-2) * (image_height-2); i++) {
+//     // //     if (i%(image_width-2) == 0) {
+//     // //         printf("\n");
+//     // //     }
+//     // //     printf("%4d ", image_conv[i]);
+//     // // }
+//     // // printf("\n");
+//     // //     
+//     // //     
+//     // // 
+//     // // printf("\n");
+//     // //
+//     //
+//     // // Max pooling 3X3
+//     //
+//     // // int * image_pool = malloc((grayscale_width-2-2) * (grayscale_height-2-2) * sizeof(int));
+//     //
+//     // // if(image_pool == NULL) goto error;
+//     //
+//     // // max_pool_3X3(image_conv, (grayscale_height-2), (grayscale_width-2), image_pool);
+//     // 
+//     // // printf("\nMax pool : \n");
+//     // // for (size_t i = 0; i < (grayscale_width-2-2) * (grayscale_height-2-2); i++) {
+//     // //     if (i%(grayscale_width-2-2) == 0) {
+//     // //         printf("\n");
+//     // //     }
+//     // //     printf("%4d ", image_pool[i]);
+//     // // }
+//     // // printf("\n");
+//     //
+//     // // Max pooling 2X2
+//     //
+//     // int * image_pool = malloc( ((image_width-2)/2) * ((image_height-2)/2) * sizeof(int));
+//     //
+//     // if(image_pool == NULL) goto error2;
+//     //
+//     // max_pool_2X2_reduced_size(image_conv, image_height-2, image_width-2, image_pool);
+//     // 
+//     // // printf("\nMax pool : \n");
+//     // // for (size_t i = 0; i < ((image_width-2)/2) * ((image_height-2)/2); i++) {
+//     // //     if (i%((image_width-2)/2) == 0) {
+//     // //         printf("\n");
+//     // //     }
+//     // //     printf("%4d ", image_pool[i]);
+//     // // }
+//     // // printf("\n");
+//     //
+//     // // spng_ctx_free(ctx);
+//     // free(image);
+//     // free(image_grayscale);
+//     // free(image_conv);
+//     // free(kernel_filter);
+//     // // fclose(png);
+//
+//     // return image_pool;
+//
+//
+//    
+// }
