@@ -10,7 +10,7 @@ set key autotitle columnhead
 set ylabel "err"
 set xlabel "id" 
 
-#set logscale y
+set logscale y
 #set logscale x
 
 img1 = "image.png"
