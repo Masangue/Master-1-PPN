@@ -1,10 +1,7 @@
 CC=gcc
 LDFLAGS=-lm
 
-all: main image_processing
-
-main: main.c
-	$(CC) -o $@ $< $(LDFLAGS)
+all: image_processing
 
 image_processing: image_processing.c
 	$(CC) -o $@ $< -I./lib/ -L./lib/ -lspng 

@@ -91,11 +91,11 @@ void backpropagate( Layer * layer1, Layer * layer2 ){
     u64 next_size = layer2->size;
     
     for( u64 j = 0; j < next_size; j++){
-        layer1->delta_bias[j] = eta * layer2->delta_neurons[j] + alpha * layer1->delta_bias[j];
+        layer1->delta_bias[j] = eta * layer2->delta_neurons[j] + alpha2 * layer1->delta_bias[j];
         layer1->bias[j] += layer1->delta_bias[j];
         for( u64 i = 0; i < size; i++){
             layer1->delta_weights[j * size + i] = eta * layer1->neurons[i] * layer2->delta_neurons[j] + 
-                                                  alpha * layer1->delta_weights[j * size + i];
+                                                  alpha2 * layer1->delta_weights[j * size + i];
             layer1->weights[ j * size + i] += layer1->delta_weights[j * size + i];
         }
     }

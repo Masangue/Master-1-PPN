@@ -7,7 +7,7 @@
 #include "type.h"
 
 #define eta 0.5
-#define alpha 0.3
+#define alpha2 0.3
 
 typedef struct {
     u64 size;
