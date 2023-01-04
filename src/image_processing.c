@@ -62,11 +62,12 @@ void max_pool_2X2_reduced_size(int * conv_image, size_t height, size_t width, in
     }
 }
 
-int * process_img(char *img) {
+int process_img(char *img, unsigned char * image, size_t * image_size, size_t * image_width, size_t * image_height  ) {
     FILE *png;
     int ret = 0;
     spng_ctx *ctx = NULL;
-    unsigned char *image = NULL;
+    // unsigned char *image = NULL;
+    // size_t image_size, image_width, image_height;
 
     png = fopen(img, "rb");
 
@@ -111,17 +112,17 @@ int * process_img(char *img) {
 
     if(!ret) printf("palette entries: %u\n", plte.n_entries);
 
-    size_t image_size, image_width, image_height;
+    // size_t image_size, image_width, image_height;
 
     int fmt = SPNG_FMT_PNG;
 
     if(ihdr.color_type == SPNG_COLOR_TYPE_INDEXED) fmt = SPNG_FMT_RGB8;
 
-    ret = spng_decoded_image_size(ctx, fmt, &image_size);
+    ret = spng_decoded_image_size(ctx, fmt, image_size);
 
     if(ret) goto error;
 
-    image = malloc(image_size);
+    image = malloc(*image_size);
 
     if(image == NULL) goto error;
 
@@ -133,8 +134,8 @@ int * process_img(char *img) {
         goto error;
     }
 
-    image_height = ihdr.height;
-    image_width = image_size / image_height;
+    *image_height = ihdr.height;
+    *image_width = (*image_size) / (*image_height);
 
     struct spng_row_info row_info = {0};
 
@@ -143,7 +144,7 @@ int * process_img(char *img) {
         ret = spng_get_row_info(ctx, &row_info);
         if(ret) break;
 
-        ret = spng_decode_row(ctx, image + row_info.row_num * image_width, image_width);
+        ret = spng_decode_row(ctx, image + row_info.row_num * (*image_width), *image_width);
     }
     while(!ret);
 
@@ -158,11 +159,40 @@ int * process_img(char *img) {
     }
 
 
+    spng_ctx_free(ctx);
+    free(image);
+    // free(image_grayscale);
+    // free(image_conv);
+    // free(kernel_filter);
+    fclose(png);
+
+    return 0;
+
+    error:
+        spng_ctx_free(ctx);
+        free(image);
+        // free(image_grayscale);
+        // free(image_conv);
+        // free(image_pool);
+        // free(kernel_filter);
+        fclose(png);
+        return -1;
+
+}
+
+int main(){
+    unsigned char *image = NULL;
+    size_t image_size, image_width, image_height;
+
+
+    process_img("image.png", image, &image_size, &image_width, &image_height);
+
+
     // convert image to grayscale
 
     unsigned char * image_grayscale = malloc(image_size/3 * sizeof(unsigned char));
 
-    if(image_grayscale == NULL) goto error;
+    if(image_grayscale == NULL) goto error2;
     
     size_t grayscale_size = image_size/3;
     size_t grayscale_width = image_width/3;
@@ -196,11 +226,11 @@ int * process_img(char *img) {
 
     int * image_conv = malloc((grayscale_width-2) * (grayscale_height-2) * sizeof(int));
 
-    if(image_conv == NULL) goto error;
+    if(image_conv == NULL) goto error2;
 
     int * kernel_filter = malloc(9 * sizeof(int));
 
-    if(kernel_filter == NULL) goto error;
+    if(kernel_filter == NULL) goto error2;
 
     kernel_filter[0] = 1, kernel_filter[2] = 1, kernel_filter[4] = 1, kernel_filter[6] = 1, kernel_filter[8] = 1;
     kernel_filter[1] = 0, kernel_filter[3] = 0, kernel_filter[5] = 0, kernel_filter[7] = 0;
@@ -250,7 +280,7 @@ int * process_img(char *img) {
 
     int * image_pool = malloc( ((grayscale_width-2)/2) * ((grayscale_height-2)/2) * sizeof(int));
 
-    if(image_pool == NULL) goto error;
+    if(image_pool == NULL) goto error2;
 
     max_pool_2X2_reduced_size(image_conv, grayscale_height-2, grayscale_width-2, image_pool);
     
@@ -263,23 +293,23 @@ int * process_img(char *img) {
     }
     printf("\n");
 
-    spng_ctx_free(ctx);
+    // spng_ctx_free(ctx);
     free(image);
     free(image_grayscale);
     free(image_conv);
     free(kernel_filter);
-    fclose(png);
+    // fclose(png);
 
-    return image_pool;
+    // return image_pool;
 
-    error:
-        spng_ctx_free(ctx);
+
+    error2:
         free(image);
         free(image_grayscale);
         free(image_conv);
         free(image_pool);
         free(kernel_filter);
-        fclose(png);
-        return NULL;
+        return -1;
+
 
 }
