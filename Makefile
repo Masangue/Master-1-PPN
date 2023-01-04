@@ -1,11 +1,11 @@
 CC=gcc
-LDFLAGS=-lm
-INCLUDE=-I./lib/ -L./lib/ -lspng
+LDFLAGS=  -L./lib/ -lspng -lm
+INCLUDE= -I./lib/
 
 all: prog
 
 prog: main image_processing nn 
-	$(CC) -o build/*.o $(LDFLAGS)
+	$(CC) -o prog.out build/main.o build/nn.o build/image_processing.o  $(LDFLAGS)
 
 main: src/main.c
 	$(CC) -c -o build/main.o $< $(INCLUDE)
@@ -17,6 +17,6 @@ nn: src/nn.c
 	$(CC) -c -o build/nn.o $< $(INCLUDE)
 
 clean:
-	rm -f main image_processing *.o *.out
+	rm -f main image_processing *.o *.out build/*
 
 .PHONY: clean all
