@@ -31,7 +31,6 @@ void convolution_3X3(unsigned char * image, size_t height, size_t width, int * k
 }
 
 void max_pool_3X3(int * conv_image, size_t height, size_t width, int * pool_image) {
-    printf("\n");
     int max = 0;
     for (size_t i = 1; i < height-1; i++) {
         for (size_t j = 1; j < width-1; j++) {
@@ -44,6 +43,23 @@ void max_pool_3X3(int * conv_image, size_t height, size_t width, int * pool_imag
                 }
             }
             pool_image[(i-1)*(width-2) + (j-1)] = max;
+        }
+    }
+}
+
+void max_pool_2X2_reduced_size(int * conv_image, size_t height, size_t width, int * pool_image) {
+    int max = 0;
+    for (size_t i = 0; i < height-1; i+=2) {
+        for (size_t j = 0; j < width-1; j+=2) {
+            max = 0;
+            for (int ik = 0; ik < 2; ik++) {
+                for (int jk = 0; jk < 2; jk++) {
+                    if (conv_image[(i+ik)*width + (j+jk)] > max) {
+                        max = conv_image[(i+ik)*width + (j+jk)];
+                    }
+                }
+            }
+            pool_image[(i/2)*(width/2) + (j/2)] = max;
         }
     }
 }
@@ -159,6 +175,8 @@ int main(int argc, char **argv)
         // convert image to grayscale
 
         unsigned char * image_grayscale = malloc(image_size/3 * sizeof(unsigned char));
+
+        if(image_grayscale == NULL) goto error;
         
         size_t grayscale_size = image_size/3;
         size_t grayscale_width = image_width/3;
@@ -192,7 +210,11 @@ int main(int argc, char **argv)
 
         int * image_conv = malloc((grayscale_width-2) * (grayscale_height-2) * sizeof(int));
 
+        if(image_conv == NULL) goto error;
+
         int * kernel_filter = malloc(9 * sizeof(int));
+
+        if(kernel_filter == NULL) goto error;
 
         kernel_filter[0] = 1, kernel_filter[2] = 1, kernel_filter[4] = 1, kernel_filter[6] = 1, kernel_filter[8] = 1;
         kernel_filter[1] = 0, kernel_filter[3] = 0, kernel_filter[5] = 0, kernel_filter[7] = 0;
@@ -216,16 +238,39 @@ int main(int argc, char **argv)
             printf("%4d ", image_conv[i]);
         }
         printf("\n");
-
-        int * image_pool = malloc((grayscale_width-2-2) * (grayscale_height-2-2) * sizeof(int));
+            
+            
+        
+        printf("\n");
 
         // Max pooling 3X3
 
-        max_pool_3X3(image_conv, (grayscale_height-2), (grayscale_width-2), image_pool);
+        // int * image_pool = malloc((grayscale_width-2-2) * (grayscale_height-2-2) * sizeof(int));
+
+        // if(image_pool == NULL) goto error;
+
+        // max_pool_3X3(image_conv, (grayscale_height-2), (grayscale_width-2), image_pool);
+        
+        // printf("\nMax pool : \n");
+        // for (size_t i = 0; i < (grayscale_width-2-2) * (grayscale_height-2-2); i++) {
+        //     if (i%(grayscale_width-2-2) == 0) {
+        //         printf("\n");
+        //     }
+        //     printf("%4d ", image_pool[i]);
+        // }
+        // printf("\n");
+
+        // Max pooling 2X2
+
+        int * image_pool = malloc( ((grayscale_width-2)/2) * ((grayscale_height-2)/2) * sizeof(int));
+
+        if(image_pool == NULL) goto error;
+
+        max_pool_2X2_reduced_size(image_conv, grayscale_height-2, grayscale_width-2, image_pool);
         
         printf("\nMax pool : \n");
-        for (size_t i = 0; i < (grayscale_width-2-2) * (grayscale_height-2-2); i++) {
-            if (i%(grayscale_width-2-2) == 0) {
+        for (size_t i = 0; i < ((grayscale_width-2)/2) * ((grayscale_height-2)/2); i++) {
+            if (i%((grayscale_width-2)/2) == 0) {
                 printf("\n");
             }
             printf("%4d ", image_pool[i]);
