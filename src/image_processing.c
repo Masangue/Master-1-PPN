@@ -62,7 +62,7 @@ void max_pool_2X2_reduced_size(int * conv_image, size_t height, size_t width, in
     }
 }
 
-void rgb_to_grey( unsigned char * image, unsigned char * image_grayscale, size_t grayscale_size  ) {
+void rgb_to_grey( unsigned char * image, unsigned char * image_grayscale, size_t grayscale_size  ) {    
     for (size_t i = 0; i < grayscale_size; i++) {
         // classic method
         image_grayscale[i] = (image[i*3] + image[i*3+1] + image[i*3+2])/3;
@@ -72,7 +72,7 @@ void rgb_to_grey( unsigned char * image, unsigned char * image_grayscale, size_t
     }
 }
 
-int process_img(char *img, unsigned char * image, size_t * image_size, size_t * image_width, size_t * image_height  ) {
+int process_img(char *img, unsigned char ** image, size_t * image_size, size_t * image_width, size_t * image_height  ) {
     FILE *png;
     int ret = 0;
     spng_ctx *ctx = NULL;
@@ -132,9 +132,9 @@ int process_img(char *img, unsigned char * image, size_t * image_size, size_t * 
 
     if(ret) goto error;
 
-    image = malloc(*image_size);
+    *image = malloc(*image_size);
 
-    if(image == NULL) goto error;
+    if(*image == NULL) goto error;
 
     ret = spng_decode_image(ctx, NULL, 0, fmt, SPNG_DECODE_PROGRESSIVE);
 
@@ -154,9 +154,9 @@ int process_img(char *img, unsigned char * image, size_t * image_size, size_t * 
         ret = spng_get_row_info(ctx, &row_info);
         if(ret) break;
 
-        ret = spng_decode_row(ctx, image + row_info.row_num * (*image_width), *image_width);
+        ret = spng_decode_row(ctx, (*image) + row_info.row_num * (*image_width), *image_width);
     }
-    while(!ret);
+    while(!ret);    
 
     if(ret != SPNG_EOI)
     {
@@ -168,9 +168,9 @@ int process_img(char *img, unsigned char * image, size_t * image_size, size_t * 
             printf("last row: %u\n", row_info.row_num);
     }
 
-
+    
     spng_ctx_free(ctx);
-    free(image);
+    // free(image);
     // free(image_grayscale);
     // free(image_conv);
     // free(kernel_filter);
@@ -180,7 +180,7 @@ int process_img(char *img, unsigned char * image, size_t * image_size, size_t * 
 
     error:
         spng_ctx_free(ctx);
-        free(image);
+        free(*image);
         // free(image_grayscale);
         // free(image_conv);
         // free(image_pool);
@@ -190,13 +190,22 @@ int process_img(char *img, unsigned char * image, size_t * image_size, size_t * 
 
 }
 
-unsigned char * prepare_image( char * filename ){
+int * prepare_image( char * filename ) {
 
     unsigned char *image = NULL;
     size_t image_size, image_width, image_height;
 
 
-    process_img(filename, image, &image_size, &image_width, &image_height);
+    process_img(filename, &image, &image_size, &image_width, &image_height);
+
+    printf("\n");
+    for (size_t i = 0; i < (image_size); i++) {
+        if (i%(image_width) == 0) {
+            printf("\n");
+        }
+        printf("%3d ", image[i]);
+    }
+    printf("\n");
 
 
     // convert image to grayscale
@@ -210,7 +219,16 @@ unsigned char * prepare_image( char * filename ){
     image_height = image_height;
 
     
-    rgb_to_grey( image, image_grayscale, image_size  );
+    rgb_to_grey( image, image_grayscale, image_size );
+
+    printf("\n");
+    for (size_t i = 0; i < (image_size); i++) {
+        if (i%(image_width) == 0) {
+            printf("\n");
+        }
+        printf("%3d ", image_grayscale[i]);
+    }
+    printf("\n");
 
    
 
@@ -246,7 +264,7 @@ unsigned char * prepare_image( char * filename ){
     free(image_grayscale);
     free(image_conv);
     free(kernel_filter);
-    return NULL;
+    return image_pool;
 
     error2:
         free(image);

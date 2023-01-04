@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 
         printf("\nImage %s :\n", argv[img_iter]);
 
-        int * input = process_img(argv[img_iter]);
+        int * input = prepare_image(argv[img_iter]);
 
         u64 train_id = 0;
         while( train_id < 4000000){
