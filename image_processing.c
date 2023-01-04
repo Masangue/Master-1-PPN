@@ -30,6 +30,24 @@ void convolution_3X3(unsigned char * image, size_t height, size_t width, int * k
     }
 }
 
+void max_pool_3X3(int * conv_image, size_t height, size_t width, int * pool_image) {
+    printf("\n");
+    int max = 0;
+    for (size_t i = 1; i < height-1; i++) {
+        for (size_t j = 1; j < width-1; j++) {
+            max = 0;
+            for (int ik = -1; ik < 2; ik++) {
+                for (int jk = -1; jk < 2; jk++) {
+                    if (conv_image[(i+ik)*width + (j+jk)] > max) {
+                        max = conv_image[(i+ik)*width + (j+jk)];
+                    }
+                }
+            }
+            pool_image[(i-1)*(width-2) + (j-1)] = max;
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
     if(argc < 2)
@@ -198,13 +216,28 @@ int main(int argc, char **argv)
             printf("%4d ", image_conv[i]);
         }
         printf("\n");
+
+        int * image_pool = malloc((grayscale_width-2-2) * (grayscale_height-2-2) * sizeof(int));
+
+        // Max pooling 3X3
+
+        max_pool_3X3(image_conv, (grayscale_height-2), (grayscale_width-2), image_pool);
         
+        printf("\nMax pool : \n");
+        for (size_t i = 0; i < (grayscale_width-2-2) * (grayscale_height-2-2); i++) {
+            if (i%(grayscale_width-2-2) == 0) {
+                printf("\n");
+            }
+            printf("%4d ", image_pool[i]);
+        }
+        printf("\n");
 
         error:
             spng_ctx_free(ctx);
             free(image);
             free(image_grayscale);
             free(image_conv);
+            free(image_pool);
             free(kernel_filter);
             fclose(png);
 
