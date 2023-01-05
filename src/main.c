@@ -81,13 +81,13 @@ int main(int argc, char *argv[])
                 char buf[256];
                 snprintf(buf, sizeof(buf), "%s/%s", dirs[i], dir->d_name);
                 
-                dataset[n].inputs = (unsigned char *) prepare_image(&buf);
+                dataset[n].inputs = (unsigned char *) prepare_image(buf);
                 dataset[n].value = i;
                 dataset[n].filename = malloc( 256 * sizeof(char));
                 strcpy(dataset[n].filename, buf);
 
                 // char * filename = dir->d_name;
-                // printf("%s\n", dir->d_name);
+                printf("%s\n", dir->d_name);
                 n++;
             }
             closedir(d);
@@ -145,12 +145,15 @@ int main(int argc, char *argv[])
 
         for( u64 np = 0 ; np < counter ; np++ ) {
             u64 p = random_pattern[np];
+            // printf("%lld  :  %lld / %d  %d", train_id, np, counter, dataset[p].value);
 
 
             for( u64 i = 0; i < 10; i++ ){
                 layers[0]->neurons[i] = sigmoid( dataset[p].inputs[i] );
 //             layers[0]->neurons[0] = sigmoid( ((f64) a - 4.5) / 2 );
-            }        
+            }
+
+            expected[0] = dataset[p].value;
 
             // compute
             for(u64 i = 0; i < nb_layers - 1; i++){
@@ -161,15 +164,10 @@ int main(int argc, char *argv[])
             err = computeOutputDelta( layers[nb_layers - 1] , expected );
 
             cumul_err += err;
+            // printf("err %f \n", err);
 
 
-            //error
-            if( train_id % 1000 == 0){
-            // if( 1 == 1)
-                printf(" %llu; %lf\n", train_id, cumul_err/1000);
-                cumul_err = 0;
-                // getchar();
-            }
+            
 
             for(u64 i = nb_layers - 2; i > 0; i--){
                 // printf("%lld %lld\n", i, i+1);
@@ -180,6 +178,13 @@ int main(int argc, char *argv[])
                 backpropagate( layers[i], layers[i+1] );
             }
         }
+//error
+            // if( train_id % 1000 == 0){
+            // if( 1 == 1)
+        printf(" %llu; %lf\n", train_id, cumul_err/counter);
+        cumul_err = 0;
+                // getchar();
+            // }
     }
 }
 
