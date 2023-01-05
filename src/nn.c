@@ -36,13 +36,18 @@ void initLayer( Layer * layer, u64 next_size ){
             layer->delta_weights[j * size + i] = 0.0f;
         }   
     }
+    for( u64 i = 0; i < size ; i++ ){
+        layer->neurons[i]       = 0;
+        layer->delta_neurons[i] = 0;
+
+    }
 }
 
 
 void computeLayer( Layer * layer1, Layer * layer2 ){
     u64 size = layer1->size;
     u64 next_size = layer2->size;
-    f64 s = 0.f;
+    f64 s = 0.0f;
 
     for( u64 j = 0; j < next_size; j++ ){
             s = layer1->bias[j];
@@ -65,7 +70,7 @@ f64 computeOutputDelta( Layer * layer, f64 * expected ){
                                 * d_sigmoid( layer->neurons[i] );
         }
 
-    return err;
+    return sqrt(pow(expected[0] - layer->neurons[0],2));
 }
 
 void computeDelta( Layer * layer1, Layer * layer2 ){

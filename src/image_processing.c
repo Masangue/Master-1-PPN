@@ -69,11 +69,15 @@ void max_pool_3X3(unsigned char * conv_image, size_t height, size_t width, unsig
 
 void max_pool_2X2_reduced_size(unsigned char * conv_image, size_t height, size_t width, unsigned char * pool_image) {
     int max = 0;
+    // printf("h : %ld\n", height);
+    // printf("w : %ld\n", width);
     for (size_t i = 0; i < height-1; i+=2) {
         for (size_t j = 0; j < width-1; j+=2) {
             max = 0;
             for (int ik = 0; ik < 2; ik++) {
                 for (int jk = 0; jk < 2; jk++) {
+                    // printf("%ld\n", (i+ik)*width + (j+jk) );
+                    // printf("looking at  : %ld   %ld\n", (i+ik), (j+jk) );
                     if (conv_image[(i+ik)*width + (j+jk)] > max) {
                         max = conv_image[(i+ik)*width + (j+jk)];
                     }
@@ -174,7 +178,7 @@ int process_img(char *img, unsigned char ** image, size_t * image_size, size_t *
 
     if(ret) goto error;
 
-    *image = malloc(*image_size);
+    *image = malloc(*image_size * sizeof(unsigned char));
 
     if(*image == NULL) goto error;
 
@@ -232,6 +236,7 @@ unsigned char * prepare_image( char * filename ) {
     // open and decode the image
     process_img(filename, &image, &image_size, &image_width, &image_height);
 
+    // printf("%lu %lu\n",image_width, image_width);
 
 
     //convert image to grayscale (if needed)
@@ -332,9 +337,9 @@ unsigned char * prepare_image( char * filename ) {
     if(image_pool == NULL) goto error2;
 
     max_pool_2X2_reduced_size(image_conv, image_height, image_width, image_pool);
-
     image_width = image_width/2;
     image_height = image_height/2;
+
     image_size = image_width*image_height;
 
     // for (size_t i = 0; i < image_size; i++)
@@ -379,12 +384,32 @@ unsigned char * prepare_image( char * filename ) {
 
     unsigned char * image_pool_2 = malloc((image_width/2) * (image_height/2) * sizeof(unsigned char));
     if(image_pool_2 == NULL) goto error2;
+        max_pool_2X2_reduced_size(image_conv_2, image_height, image_width, image_pool_2);
 
-    max_pool_2X2_reduced_size(image_conv_2, image_height, image_width, image_pool_2);
+
 
     image_width = image_width/2;
     image_height = image_height/2;
     image_size = image_width*image_height;
+
+    // third max pool
+
+    unsigned char * image_pool_3 = malloc((image_width/2) * (image_height/2) * sizeof(unsigned char));
+    if(image_pool_3 == NULL) goto error2;
+    
+    max_pool_2X2_reduced_size(image_pool_2, image_height, image_width, image_pool_3);
+    
+
+
+
+    image_width = image_width/2;
+    image_height = image_height/2;
+    image_size = image_width*image_height;
+
+    // printf("image size : %ld\n", image_size);
+    // printf("image size : %ld\n", image_width);
+    // printf("image size : %ld\n", image_height);
+
 
 
 
@@ -396,6 +421,8 @@ unsigned char * prepare_image( char * filename ) {
     //     printf("%3d", image_pool_2[i]);
     // }
     // printf("\n");
+
+    // printf("%lu %lu\n",image_width, image_width);
 
     // printf("\n img size : %lu (%lu x %lu)\n", image_size, image_width, image_height);
 
@@ -410,9 +437,10 @@ unsigned char * prepare_image( char * filename ) {
     free(image_conv);
     free(image_pool);
     free(image_conv_2);
+    free(image_pool_2);
     // free(kernel_filter_3x3);
     free(kernel_filter_5x5);
-    return image_pool_2;
+    return image_pool_3;
 
     error2:
         free(image);

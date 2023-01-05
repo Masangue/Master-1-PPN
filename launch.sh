@@ -10,6 +10,7 @@
 
 make -B
 # LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib valgrind --log-file="error.txt" ./prog.out
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./prog.out 
+# LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib valgrind  ./prog.out
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./prog.out > data.dat
 
- # gnuplot plot.gp
+ gnuplot plot.gp
