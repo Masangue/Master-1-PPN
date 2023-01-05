@@ -14,32 +14,21 @@ k iterate through the Outputs
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <dirent.h>
 #include <string.h>
 
 
 #include "type.h"
 #include "nn.h"
 #include "image_processing.h"
+#include "file_manager.h"
 
 #define NB_MAX_LAYER   50
 #define NB_MAX_OUTPUTS 50
 
-typedef struct {
-    char * filename;
-    int value ;
-    unsigned char * inputs;
-} mri_image;
-
 int main(int argc, char *argv[])
 {
 
-    // if(argc < 2)
-    // {
-    //     printf("no input file\n");
-    //     return 1;
-    // }
-    // 
+    
     srand(time(NULL));
 
     char * dirs[] = { "dataset/train/NonDemented", "dataset/train/VeryMildDemented"};
@@ -47,63 +36,25 @@ int main(int argc, char *argv[])
 
     // number of images
     for( int i = 0; i < 2; i++ ){
-        DIR *d;
-        struct dirent *dir;
-        d = opendir(dirs[i]);
-        // printf("%s\n", dirs[i]);
-        if (d) {
-            while ((dir = readdir(d)) != NULL && counter < 50 ) {
-                if( strcmp( dir->d_name, ".") == 0 || strcmp( dir->d_name, "..") == 0 ) {
-                    continue;
-                }
-                counter++;
-            }
-            counter = 0;
-            closedir(d);
-        }
+        int num = count_file(dirs[i]);
+        printf(" file in %s :  %d\n", dirs[i],num);
     }
 
-    // fill dataset
     mri_image * dataset = malloc( 100 * sizeof(mri_image) );
     u64 * random_pattern = malloc( 100 * sizeof(u64));
-   
-    u64 n = 0;
-    counter = 0;
-    for( int i = 0; i < 2; i++ ){
-        DIR *d;
-        struct dirent *dir;
-        d = opendir(dirs[i]);
-        if (d) {
-            while ((dir = readdir(d)) != NULL && counter < 50) {
-                if( strcmp( dir->d_name, ".") == 0 || strcmp( dir->d_name, "..") == 0 ) {
-                    continue;
-                }
-                char buf[256];
-                snprintf(buf, sizeof(buf), "%s/%s", dirs[i], dir->d_name);
-                // printf("%s\n",buf); 
-                dataset[n].inputs = (unsigned char *) prepare_image(buf);
-                dataset[n].value = i;
-                dataset[n].filename = "SalutAtousCesFanta";
-
-                n++;
-                counter++;
-            }
-            counter = 0;
-            closedir(d);
-        }
-    }
-
-    counter = 100;
-
     
+    // fill dataset
+    int total = load_dataset( dirs, 2, dataset, 50);
 
-    printf("dataset filled : %llu\n", n);
-    // return 0;
+
+    counter = total;
+
+
+    printf("dataset filled : %llu\n", total);
     
     
 
 
-    // int * input = process_img(argv[img_iter]);
 
 
     
