@@ -45,7 +45,7 @@ void convolution_5X5(unsigned char * image, size_t height, size_t width, unsigne
                 }
             }
 
-            conv_image[(i)*(width-4) + (j)] = conv_image[(i)*(width-4) + (j)]/13;
+            conv_image[(i)*(width-4) + (j)] = (unsigned char)((conv_image[(i)*(width-4) + (j)])/13);
         }
     }
 }
@@ -264,15 +264,24 @@ unsigned char * prepare_image( char * filename ) {
     // image_size = image_width*image_height;
 
 
-    // int * kernel_filter_3x3 = malloc(9 * sizeof(int));
-    // if(kernel_filter_3x3 == NULL) goto error2;
+    int * kernel_filter_3x3 = malloc(9 * sizeof(int));
+    if(kernel_filter_3x3 == NULL) goto error2;
 
-    // kernel_filter_3x3[0] = 1, kernel_filter_3x3[2] = 1, kernel_filter_3x3[4] = 1, kernel_filter_3x3[6] = 1, kernel_filter_3x3[8] = 1;
-    // kernel_filter_3x3[1] = 0, kernel_filter_3x3[3] = 0, kernel_filter_3x3[5] = 0, kernel_filter_3x3[7] = 0;
+    kernel_filter_3x3[0] = 1, kernel_filter_3x3[2] = 1, kernel_filter_3x3[4] = 1, kernel_filter_3x3[6] = 1, kernel_filter_3x3[8] = 1;
+    kernel_filter_3x3[1] = 0, kernel_filter_3x3[3] = 0, kernel_filter_3x3[5] = 0, kernel_filter_3x3[7] = 0;
 
        
     // convolution_3X3(image, image_height, image_width, kernel_filter_3x3, 1, image_conv);
 
+
+    // for (size_t i = 0; i < image_size; i++)
+    // {
+    //     if (i%image_width == 0) {
+    //         printf("\n");
+    //     }
+    //     printf("%3d", image[i]);
+    // }
+    // printf("\n");
 
 
     /*  first convolution with a kernel filter :
@@ -286,11 +295,6 @@ unsigned char * prepare_image( char * filename ) {
     
     unsigned char * image_conv = malloc((image_width-4) * (image_height-4) * sizeof(unsigned char));
     if(image_conv == NULL) goto error2;
-
-    image_width = image_width-4;
-    image_height = image_height-4;
-    image_size = image_width*image_height;
-
 
     unsigned char * kernel_filter_5x5 = malloc(5*5 * sizeof(unsigned char));
     if(kernel_filter_5x5 == NULL) goto error2;
@@ -306,18 +310,42 @@ unsigned char * prepare_image( char * filename ) {
     }
        
     convolution_5X5(image, image_height, image_width, kernel_filter_5x5, 1, image_conv);
-    
-    unsigned char * image_pool = malloc((image_width/2) * (image_height/2) * sizeof(unsigned char));
-    if(image_pool == NULL) goto error2;
+
+    image_width = image_width-4;
+    image_height = image_height-4;
+    image_size = image_width*image_height;
+
+    // for (size_t i = 0; i < image_size; i++)
+    // {
+    //     if (i%image_width == 0) {
+    //         printf("\n");
+    //     }
+    //     printf("%3d", image_conv[i]);
+    // }
+    // printf("\n");
+
 
 
     // first max pool
+
+    unsigned char * image_pool = malloc((image_width/2) * (image_height/2) * sizeof(unsigned char));
+    if(image_pool == NULL) goto error2;
 
     max_pool_2X2_reduced_size(image_conv, image_height, image_width, image_pool);
 
     image_width = image_width/2;
     image_height = image_height/2;
     image_size = image_width*image_height;
+
+    // for (size_t i = 0; i < image_size; i++)
+    // {
+    //     if (i%image_width == 0) {
+    //         printf("\n");
+    //     }
+    //     printf("%3d", image_pool[i]);
+    // }
+    // printf("\n");
+
 
 
     /*  second convolution with a kernel filter :
@@ -337,6 +365,15 @@ unsigned char * prepare_image( char * filename ) {
     image_height = image_height-4;
     image_size = image_width*image_height;
 
+    // for (size_t i = 0; i < image_size; i++)
+    // {
+    //     if (i%image_width == 0) {
+    //         printf("\n");
+    //     }
+    //     printf("%3d", image_conv_2[i]);
+    // }
+    // printf("\n");
+
 
     // second max pool
 
@@ -348,6 +385,20 @@ unsigned char * prepare_image( char * filename ) {
     image_width = image_width/2;
     image_height = image_height/2;
     image_size = image_width*image_height;
+
+
+
+    // for (size_t i = 0; i < image_size; i++)
+    // {
+    //     if (i%image_width == 0) {
+    //         printf("\n");
+    //     }
+    //     printf("%3d", image_pool_2[i]);
+    // }
+    // printf("\n");
+
+    // printf("\n img size : %lu (%lu x %lu)\n", image_size, image_width, image_height);
+
 
 
     //apercu de l'image
