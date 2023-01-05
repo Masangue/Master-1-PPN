@@ -28,6 +28,27 @@ void convolution_3X3(unsigned char * image, size_t height, size_t width, int * k
     }
 }
 
+void convolution_5X5(unsigned char * image, size_t height, size_t width, int * kernel_filter, /*size_t filter_height, size_t filter_width,*/ int stride, int * conv_image) {
+    size_t filter_id = 0;
+    for (size_t i = 0; i < height-4; i += stride) {
+        for (size_t j = 0; j < width-4; j += stride) {
+
+            conv_image[(i)*(width-4) + (j)] = 1;
+
+            filter_id = 0;
+
+            for (size_t ik = 0; ik < 5; ik++) {
+                for (size_t jk = 0; jk < 5; jk++) {
+                    conv_image[(i)*(width-4) + (j)] += image[(i+ik)*width + (j+jk)] * kernel_filter[filter_id];
+                    filter_id += 1;
+                }
+            }
+
+            conv_image[(i)*(width-4) + (j)] = conv_image[(i)*(width-4) + (j)]/13;
+        }
+    }
+}
+
 void max_pool_3X3(int * conv_image, size_t height, size_t width, int * pool_image) {
     int max = 0;
     for (size_t i = 1; i < height-1; i++) {
@@ -46,6 +67,7 @@ void max_pool_3X3(int * conv_image, size_t height, size_t width, int * pool_imag
 }
 
 void max_pool_2X2_reduced_size(int * conv_image, size_t height, size_t width, int * pool_image) {
+    // printf("\nsize : %lu x %lu\n", height, width);
     int max = 0;
     for (size_t i = 0; i < height-1; i+=2) {
         for (size_t j = 0; j < width-1; j+=2) {
@@ -198,84 +220,124 @@ int * prepare_image( char * filename ) {
 
     process_img(filename, &image, &image_size, &image_width, &image_height);
 
-    printf("\n");
-    for (size_t i = 0; i < (image_size); i++) {
-        if (i%(image_width) == 0) {
-            printf("\n");
-        }
-        printf("%3d ", image[i]);
-    }
-    printf("\n");
+    // printf("\n");
+    // for (size_t i = 0; i < (image_size); i++) {
+    //     if (i%(image_width) == 0) {
+    //         printf("\n");
+    //     }
+    //     printf("%3d ", image[i]);
+    // }
+    // printf("\n");
 
 
     // convert image to grayscale
 
-    unsigned char * image_grayscale = malloc(image_size/3 * sizeof(unsigned char));
+    // unsigned char * image_grayscale = malloc(image_size/3 * sizeof(unsigned char));
 
-    if(image_grayscale == NULL) goto error2;
+    // if(image_grayscale == NULL) goto error2;
     
-    image_size = image_size/3;
-    image_width = image_width/3;
-    image_height = image_height;
+    // image_size = image_size/3;
+    // image_width = image_width/3;
+    // image_height = image_height;
 
     
-    rgb_to_grey( image, image_grayscale, image_size );
+    // rgb_to_grey( image, image_grayscale, image_size );
 
-    printf("\n");
-    for (size_t i = 0; i < (image_size); i++) {
-        if (i%(image_width) == 0) {
-            printf("\n");
-        }
-        printf("%3d ", image_grayscale[i]);
-    }
-    printf("\n");
 
-   
-
-        
     /*  first convolution with a kernel filter :
             1 0 1
             0 1 0
             1 0 1
     */
 
-    int * image_conv = malloc((image_width-2) * (image_height-2) * sizeof(int));
+    // int * image_conv = malloc((image_width-2) * (image_height-2) * sizeof(int));
+    // if(image_conv == NULL) goto error2;
+
+    // int * kernel_filter = malloc(9 * sizeof(int));
+    // if(kernel_filter == NULL) goto error2;
+
+
+    // kernel_filter[0] = 1, kernel_filter[2] = 1, kernel_filter[4] = 1, kernel_filter[6] = 1, kernel_filter[8] = 1;
+    // kernel_filter[1] = 0, kernel_filter[3] = 0, kernel_filter[5] = 0, kernel_filter[7] = 0;
+
+       
+    // convolution_3X3(image_grayscale, image_height, image_width, kernel_filter, 1, image_conv);
+
+
+    /*  first convolution with a kernel filter :
+            1 0 1 0 1
+            0 1 0 1 0
+            1 0 1 0 1
+            0 1 0 1 0
+            1 0 1 0 1
+    */
+
+    
+    int * image_conv = malloc((image_width-4) * (image_height-4) * sizeof(int));
     if(image_conv == NULL) goto error2;
 
-    int * kernel_filter = malloc(9 * sizeof(int));
+    image_width = image_width-4;
+    image_height = image_height-4;
+    image_size = image_width*image_height;
+
+
+    int * kernel_filter = malloc(5*5 * sizeof(int));
     if(kernel_filter == NULL) goto error2;
 
 
-    kernel_filter[0] = 1, kernel_filter[2] = 1, kernel_filter[4] = 1, kernel_filter[6] = 1, kernel_filter[8] = 1;
-    kernel_filter[1] = 0, kernel_filter[3] = 0, kernel_filter[5] = 0, kernel_filter[7] = 0;
-
+    for (size_t i = 0; i < 5*5; i++) {
+        if (i%2 == 0) {
+            kernel_filter[i] = 1;
+        }
+        else {
+            kernel_filter[i] = 0;
+        }   
+    }
        
-    convolution_3X3(image_grayscale, image_height, image_width, kernel_filter, 1, image_conv);
+    convolution_5X5(image, image_height, image_width, kernel_filter, 1, image_conv);
 
+    // printf("\n");
+    // for (size_t i = 0; i < (image_size); i++) {
+    //     if (i%(image_width) == 0) {
+    //         printf("\n");
+    //     }
+    //     printf("%3d ", image_conv[i]);
+    // }
+    // printf("\n");
     
-    int * image_pool = malloc( ((image_width-2)/2) * ((image_height-2)/2) * sizeof(int));
+    int * image_pool = malloc((image_width/2) * (image_height/2) * sizeof(int));
     if(image_pool == NULL) goto error2;
 
-    max_pool_2X2_reduced_size(image_conv, image_height-2, image_width-2, image_pool);
+    max_pool_2X2_reduced_size(image_conv, image_height, image_width, image_pool);
+
+    image_width = image_width/2;
+    image_height = image_height/2;
+    image_size = image_width*image_height;
+
+    // printf("\n");
+    // for (size_t i = 0; i < (image_size); i++) {
+    //     if (i%(image_width) == 0) {
+    //         printf("\n");
+    //     }
+    //     printf("%3d ", image_pool[i]);
+    // }
+    // printf("\n");
    
 
     // spng_ctx_free(ctx);
     free(image);
-    free(image_grayscale);
+    // free(image_grayscale);
     free(image_conv);
     free(kernel_filter);
     return image_pool;
 
     error2:
         free(image);
-        free(image_grayscale);
+        // free(image_grayscale);
         free(image_conv);
         free(image_pool);
         free(kernel_filter);
         return NULL;
-
-
-
 }
 
 // int main(){
