@@ -133,7 +133,20 @@ void debug( Layer * layer, u64 next_size ){
     // for( u64 i = 0; i < layer->size; i++)
     //     printf("%lf \n", layer->delta_neurons[i]);
     
+    void free_all(Layer ** layers, u64 size)
+    {
+        for(int i = 0; i<size; i++){
+            free(layers[i]->bias);
+            free(layers[i]->neurons);
+            free(layers[i]->weights);
 
+            free(layers[i]->delta_neurons);
+            free(layers[i]->delta_weights);
+            free(layers[i]->delta_bias);
+            free(layers[i]);
+        }
+        free(layers);
+    }
 }
 
 
