@@ -45,7 +45,7 @@ void convolution_5X5(unsigned char * image, size_t height, size_t width, unsigne
                 }
             }
 
-            conv_image[(i)*(width-4) + (j)] = (unsigned char)((conv_image[(i)*(width-4) + (j)])/13);
+            conv_image[(i)*(width-4) + (j)] = (unsigned char)((conv_image[(i)*(width-4) + (j)])/9);
         }
     }
 }
@@ -423,14 +423,14 @@ unsigned char * prepare_image( char * filename ) {
 
     // third max pool
 
-    // unsigned char * image_pool_3 = malloc((image_width/2) * (image_height/2) * sizeof(unsigned char));
-    // if(image_pool_3 == NULL) goto error2;
+    unsigned char * image_pool_3 = malloc((image_width/2) * (image_height/2) * sizeof(unsigned char));
+    if(image_pool_3 == NULL) goto error2;
     
-    // max_pool_2X2_reduced_size(image_pool_2, image_height, image_width, image_pool_3);
+    max_pool_2X2_reduced_size(image_pool_2, image_height, image_width, image_pool_3);
 
-    // image_width = image_width/2;
-    // image_height = image_height/2;
-    // image_size = image_width*image_height;
+    image_width = image_width/2;
+    image_height = image_height/2;
+    image_size = image_width*image_height;
 
     // printf("image size : %ld\n", image_size);
     // printf("image size : %ld\n", image_width);
@@ -461,10 +461,10 @@ unsigned char * prepare_image( char * filename ) {
     free(image_conv);
     free(image_pool);
     free(image_conv_2);
-    // free(image_pool_2);
+    free(image_pool_2);
     // free(kernel_filter_3x3);
     free(kernel_filter_5x5);
-    return image_pool_2;
+    return image_pool_3;
 
     error2:
         free(image);

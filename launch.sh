@@ -19,7 +19,7 @@ make -B
 # LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./prog.out > data.dat
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./prog.out 
 
-# gnuplot plot.gp
+gnuplot plot.gp
 
 
-# LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./test.out
+# LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./test.out 

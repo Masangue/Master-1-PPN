@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     
     srand(time(NULL));
 
-    char * dirs[] = { "dataset/train/NonDemented", "dataset/train/VeryMildDemented"};
+    char * dirs[] = { "dataset/test/NonDemented", "dataset/test/VeryMildDemented"};
     
     
     
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     u64 neurons_per_layers[NB_MAX_LAYER] = {480,200,50,10,1,1};
     u64 input_size = neurons_per_layers[0];
     f64 expected[NB_MAX_OUTPUTS];
-    u64 train_max = 50;
+    u64 train_max = 1;
 
     
     mri_image * dataset  = malloc( num_folder * max_per_folder * sizeof(mri_image) );
@@ -72,6 +72,7 @@ int main(int argc, char *argv[])
 
             //error
             err = get_error( layers[nb_layers - 1] , expected );
+            printf(" error ; %lf\n", err );
             cumul_err += err;
             
         }

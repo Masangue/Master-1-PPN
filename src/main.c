@@ -37,13 +37,13 @@ int main(int argc, char *argv[])
     
     
     int num_folder = 2;
-    int max_per_folder = 9999;
+    int max_per_folder = 100;
 
     u64 nb_layers = 5;
-    u64 neurons_per_layers[NB_MAX_LAYER] = {2009,200,50,10,1,1};
+    u64 neurons_per_layers[NB_MAX_LAYER] = {480,500,200,30,1,1};
     u64 input_size = neurons_per_layers[0];
     f64 expected[NB_MAX_OUTPUTS];
-    u64 train_max = 1000;
+    u64 train_max = 500;
 
     
     // number of images
