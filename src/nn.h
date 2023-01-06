@@ -23,6 +23,7 @@ typedef struct {
 // f64 eta = 0.3;
 
 Layer * createLayer( u64 size, u64 next_size );
+void    free_all(Layer ** layers, u64 size);
 void    initLayer( Layer * layer, u64 next_size );
 void    computeLayer( Layer * layer1, Layer * layer2 );
 f64     computeOutputDelta( Layer * layer, f64 * expected );

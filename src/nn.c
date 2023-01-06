@@ -136,6 +136,21 @@ void debug( Layer * layer, u64 next_size ){
 
 }
 
+void free_all(Layer ** layers, u64 size)
+{
+    for(int i = 0; i<size; i++){
+        free(layers[i]->bias);
+        free(layers[i]->neurons);
+        free(layers[i]->weights);
+
+        free(layers[i]->delta_neurons);
+        free(layers[i]->delta_weights);
+        free(layers[i]->delta_bias);
+        free(layers[i]);
+    }
+    free(layers);
+}
+
 Layer ** Init_Neural_network(u64 * neurons_per_layers, u64 nb_layers){
     Layer ** layers = malloc( nb_layers * sizeof(Layer *) );
 

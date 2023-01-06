@@ -97,5 +97,6 @@ int main(int argc, char *argv[])
         printf(" %llu; %lf\n", train_id, cumul_err/counter);
         cumul_err = 0;
     }
-}
 
+    free_all(layers, nb_layers);
+}
