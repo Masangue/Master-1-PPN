@@ -1,4 +1,4 @@
- #pragma once
+#pragma once
 
 #include <time.h>
 #include <math.h>
@@ -7,10 +7,12 @@
 #include <string.h>
 #include <dirent.h>
 
+#include "type.h"
+
 typedef struct {
     char * filename;
     int value ;
-    unsigned char * inputs;
+    u8 * inputs;
 } mri_image;
 
 

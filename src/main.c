@@ -32,101 +32,65 @@ int main(int argc, char *argv[])
     srand(time(NULL));
 
     char * dirs[] = { "dataset/train/NonDemented", "dataset/train/VeryMildDemented"};
-    int counter = 0; 
+    
+    
+    
+    int num_folder = 2;
+    int max_per_folder = 50;
 
+    u64 nb_layers = 5;
+    u64 neurons_per_layers[NB_MAX_LAYER] = {480,200,50,10,1,1};
+    u64 input_size = neurons_per_layers[0];
+    f64 expected[NB_MAX_OUTPUTS];
+    u64 train_max = 200;
+
+    
     // number of images
     for( int i = 0; i < 2; i++ ){
         int num = count_file(dirs[i]);
         printf(" file in %s :  %d\n", dirs[i],num);
     }
 
-    mri_image * dataset = malloc( 100 * sizeof(mri_image) );
-    u64 * random_pattern = malloc( 100 * sizeof(u64));
+    mri_image * dataset  = malloc( num_folder * max_per_folder * sizeof(mri_image) );
+    u64 * random_pattern = malloc( num_folder * max_per_folder * sizeof(u64));
     
     // fill dataset
-    int total = load_dataset( dirs, 2, dataset, 50);
+    u64 counter = (u64) load_dataset( dirs, num_folder, dataset, max_per_folder);
 
-
-    counter = total;
-
-
-    printf("dataset filled : %llu\n", total);
+    printf("dataset filled : %llu\n", counter);
     
     
-
-
-
-
     
     //  Initialise The NN
-    u64 nb_layers = 5;
-    u64 input_size = 480;
-    u64 neurons_per_layers[NB_MAX_LAYER] = {480,200,50,10,1,1};
-    Layer ** layers = malloc( nb_layers * sizeof(Layer *) );
-
-    f64 expected[NB_MAX_OUTPUTS];
-
-    for(u64 i = 0; i < nb_layers; i++){
-        layers[i] = createLayer( neurons_per_layers[i], neurons_per_layers[i+1]);
-    }
-
-    for(u64 i = 0; i < nb_layers - 1; i++){
-        initLayer( layers[i], neurons_per_layers[i+1] );
-    }
+    Layer ** layers = Init_Neural_network(neurons_per_layers, nb_layers);
+    
     printf(" id ; err\n");
 
     //  Training
-    for( u64 train_id = 0; train_id < 400; train_id++ ){
+    for( u64 train_id = 0; train_id < train_max; train_id++ ){
         f64 cumul_err = 0.0f;
         f64 err = 0.0f; 
-
-       
         //randomize dataset
-        for( u64 p = 0 ; p < counter ; p++ ) {    /* randomize order of training patterns */
-            random_pattern[p] = p ;
-        }
-
-        for( u64 p = 0 ; p < counter - 1 ; p++) {
-            u64 np = rand() % ( counter - p) + p;
-            
-            u64 op = random_pattern[p] ;
-            random_pattern[p] = random_pattern[np];
-            random_pattern[np] = op;
-        }
-        
-        
-        //
+        shuffle(counter, random_pattern);
+      
+        // 
         for( u64 np = 0 ; np < counter ; np++ ) {
             u64 p = random_pattern[np];
-
             
-            // fill inputs
-            for( u64 i = 0; i < input_size; i++ ){
-                layers[0]->neurons[i] = (f64)dataset[p].inputs[i] / 20;
-            }
-
+            //set input
+            fill_input(layers[0], input_size, dataset[p].inputs);
+            
+            // set expected
             expected[0] = dataset[p].value;
 
             // compute
-            for(u64 i = 0; i < nb_layers - 1; i++){
-                computeLayer( layers[i], layers[i+1] );
-            }
-            
-            //delta
-            err = computeOutputDelta( layers[nb_layers - 1] , expected );
+            forward_compute( nb_layers, layers );
 
+            //error
+            err = get_error( layers[nb_layers - 1] , expected );
             cumul_err += err;
-
-
             
-
-            for(u64 i = nb_layers - 2; i > 0; i--){
-                computeDelta( layers[i], layers[i+1] );
-            }
-
-            for(u64 i = 0; i < nb_layers - 1; i++){
-                backpropagate( layers[i], layers[i+1] );
-            }
+            backward_compute(nb_layers, layers, expected );
         }
         
         //error

@@ -136,4 +136,71 @@ void debug( Layer * layer, u64 next_size ){
 
 }
 
+Layer ** Init_Neural_network(u64 * neurons_per_layers, u64 nb_layers){
+    Layer ** layers = malloc( nb_layers * sizeof(Layer *) );
 
+    for(u64 i = 0; i < nb_layers; i++){
+        layers[i] = createLayer( neurons_per_layers[i], neurons_per_layers[i+1]);
+    }
+
+    for(u64 i = 0; i < nb_layers - 1; i++){
+        initLayer( layers[i], neurons_per_layers[i+1] );
+    }
+
+    return layers;
+}
+
+
+
+
+void shuffle(u64 size, u64 * tab){
+    for( u64 p = 0 ; p < size ; p++ ) { 
+        tab[p] = p ;
+    }
+    for( u64 p = 0 ; p < size - 1 ; p++) {
+        u64 np = rand() % ( size - p) + p;
+            
+        u64 op = tab[p] ;
+        tab[p] = tab[np];
+        tab[np] = op;
+    }
+}
+
+
+void fill_input(Layer * layer, u64 size, u8 * tab){
+    for( u64 i = 0; i < size; i++ ){
+        layer->neurons[i] = (f64) tab[i] / 20;
+    }
+}
+
+void forward_compute(u64 nb_layers, Layer ** layers ){
+    for(u64 i = 0; i < nb_layers - 1; i++){
+        computeLayer( layers[i], layers[i+1] );
+    }
+}
+
+f64 get_error(Layer * layer, f64 * expected){
+    u64 size = layer->size;
+    f64 err = 0.f;
+
+    for( u64 i = 0; i < size; i++ ){
+            err += sqrt(pow(expected[i] - layer->neurons[i],2));
+        }
+
+    return err/size;
+
+}
+
+void backward_compute(u64 nb_layers, Layer ** layers, f64 * expected ){
+
+    computeOutputDelta( layers[nb_layers - 1] , expected );
+
+    for(u64 i = nb_layers - 2; i > 0; i--){
+        computeDelta( layers[i], layers[i+1] );
+    }
+
+    for(u64 i = 0; i < nb_layers - 1; i++){
+        backpropagate( layers[i], layers[i+1] );
+    }
+
+}
