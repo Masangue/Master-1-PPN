@@ -269,11 +269,11 @@ unsigned char * prepare_image( char * filename ) {
     // image_size = image_width*image_height;
 
 
-    int * kernel_filter_3x3 = malloc(9 * sizeof(int));
-    if(kernel_filter_3x3 == NULL) goto error2;
+    // int * kernel_filter_3x3 = malloc(9 * sizeof(int));
+    // if(kernel_filter_3x3 == NULL) goto error2;
 
-    kernel_filter_3x3[0] = 1, kernel_filter_3x3[2] = 1, kernel_filter_3x3[4] = 1, kernel_filter_3x3[6] = 1, kernel_filter_3x3[8] = 1;
-    kernel_filter_3x3[1] = 0, kernel_filter_3x3[3] = 0, kernel_filter_3x3[5] = 0, kernel_filter_3x3[7] = 0;
+    // kernel_filter_3x3[0] = 1, kernel_filter_3x3[2] = 1, kernel_filter_3x3[4] = 1, kernel_filter_3x3[6] = 1, kernel_filter_3x3[8] = 1;
+    // kernel_filter_3x3[1] = 0, kernel_filter_3x3[3] = 0, kernel_filter_3x3[5] = 0, kernel_filter_3x3[7] = 0;
 
        
     // convolution_3X3(image, image_height, image_width, kernel_filter_3x3, 1, image_conv);

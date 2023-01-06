@@ -15,11 +15,11 @@ mkdir -p storage
 
 make -B
 # LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib valgrind --log-file="error.txt" ./prog.out
-# LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib valgrind  ./prog.out
+# LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib valgrind --leak-check=full ./prog.out
 # LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./prog.out > data.dat
-# LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./prog.out 
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./prog.out 
 
 # gnuplot plot.gp
 
 
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./test.out
+# LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./test.out
