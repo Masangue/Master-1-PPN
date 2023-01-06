@@ -20,26 +20,20 @@ int main(int argc, char *argv[])
     
     srand(time(NULL));
 
-    char * dirs[] = { "dataset/train/NonDemented", "dataset/train/VeryMildDemented"};
+    char * dirs[] = { "dataset/test/NonDemented", "dataset/test/VeryMildDemented"};
     
     
     
     int num_folder = 2;
-    int max_per_folder = 100;
+    int max_per_folder = 800;
 
     u64 nb_layers = 5;
-    u64 neurons_per_layers[NB_MAX_LAYER] = {480,500,200,30,1,1};
+    u64 neurons_per_layers[NB_MAX_LAYER] = {480,200,50,10,1,1};
     u64 input_size = neurons_per_layers[0];
     f64 expected[NB_MAX_OUTPUTS];
-    u64 train_max = 500;
+    u64 train_max = 1;
 
     
-    // number of images
-    for( int i = 0; i < 2; i++ ){
-        int num = count_file(dirs[i]);
-        printf(" file in %s :  %d\n", dirs[i],num);
-    }
-
     mri_image * dataset  = malloc( num_folder * max_per_folder * sizeof(mri_image) );
     u64 * random_pattern = malloc( num_folder * max_per_folder * sizeof(u64));
     
@@ -51,14 +45,15 @@ int main(int argc, char *argv[])
     
     
     //  Initialise The NN
-    Layer ** layers = Init_Neural_network(neurons_per_layers, nb_layers);
+    Layer ** layers = load_nn("storage", nb_layers, neurons_per_layers);
     
     printf(" id ; err\n");
 
-    //  Training
+    //  Testing
     for( u64 train_id = 0; train_id < train_max; train_id++ ){
         f64 cumul_err = 0.0f;
         f64 err = 0.0f; 
+
         //randomize dataset
         shuffle(counter, random_pattern);
       
@@ -77,26 +72,15 @@ int main(int argc, char *argv[])
 
             //error
             err = get_error( layers[nb_layers - 1] , expected );
+            printf(" error ; %lf\n", err );
             cumul_err += err;
             
-            backward_compute(nb_layers, layers, expected );
         }
         
         //error
         printf(" %llu; %lf\n", train_id, cumul_err/counter);
         cumul_err = 0;
     }
-    store_nn("storage", layers, nb_layers, neurons_per_layers);
-    // load_nn("storage", nb_layers, neurons_per_layers);
 
-
-    // free all and quit
     free_all(layers, nb_layers);
-
-    for (size_t i = 0; i < counter; i++) {
-        free(dataset[i].inputs);
-    }
-    
-    free(dataset);
-    free(random_pattern);
 }
