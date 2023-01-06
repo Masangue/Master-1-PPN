@@ -117,7 +117,7 @@ Layer ** load_nn( char * path, u64 nb_layers, u64 * neurons_per_layers ){
         sprintf (sbuf, "%s/%d%s", path, i,"bias.dat");
         FILE *bias = fopen(sbuf,"r");
         for( u64 j = 0; j < next_size; j++ ){
-            fscanf(bias, "%lf\n", &value);
+            int sc = fscanf(bias, "%lf\n", &value);
             // printf("id value : %lld %lf\n", j, value);
             layers[i]->bias[j] = value;
         }
@@ -126,7 +126,7 @@ Layer ** load_nn( char * path, u64 nb_layers, u64 * neurons_per_layers ){
         sprintf (sbuf, "%s/%d%s", path, i,"delta_bias.dat");
         FILE *delta_bias = fopen(sbuf,"r");
         for( u64 j = 0; j < next_size; j++ ){
-            fscanf(delta_bias, "%lf\n", &value);
+            int sc = fscanf(delta_bias, "%lf\n", &value);
             // printf("id value : %lld %lf\n", j, value);
             layers[i]->delta_bias[j] = value;
         }
@@ -136,7 +136,7 @@ Layer ** load_nn( char * path, u64 nb_layers, u64 * neurons_per_layers ){
         FILE *weight = fopen(sbuf,"r");
         for( u64 j = 0; j < next_size; j++ ){
             for( u64 ii = 0; ii < size ; ii++ ){
-                fscanf(weight, "%lf\n", &value);
+                int sc = fscanf(weight, "%lf\n", &value);
                 // printf("id value : %lld %lf\n", j, value);
                 layers[i]->weights[j * size + ii] = value;
             }
@@ -147,7 +147,7 @@ Layer ** load_nn( char * path, u64 nb_layers, u64 * neurons_per_layers ){
         FILE *delta_weight = fopen(sbuf,"r");
         for( u64 j = 0; j < next_size; j++ ){
             for( u64 ii = 0; ii < size ; ii++ ){
-                fscanf(delta_weight, "%lf\n", &value);
+                int sc = fscanf(delta_weight, "%lf\n", &value);
                 // printf("id value : %lld %lf\n", j, value);
                 layers[i]->delta_weights[j * size + ii] = value;
             }
@@ -156,7 +156,7 @@ Layer ** load_nn( char * path, u64 nb_layers, u64 * neurons_per_layers ){
         sprintf (sbuf, "%s/%d%s", path, i,"neurons.dat");
         FILE *neurons = fopen(sbuf,"r");
         for( u64 j = 0; j < size; j++ ){
-            fscanf(neurons, "%lf\n", &value);
+            int sc = fscanf(neurons, "%lf\n", &value);
             // printf("id value : %lld %lf\n", j, value);
             layers[i]->neurons[j] = value;
         }
@@ -165,7 +165,7 @@ Layer ** load_nn( char * path, u64 nb_layers, u64 * neurons_per_layers ){
         sprintf (sbuf, "%s/%d%s", path, i,"delta_neurons.dat");
         FILE *delta_neurons = fopen(sbuf,"r");
         for( u64 j = 0; j < size; j++ ){
-            fscanf(delta_neurons, "%lf\n", &value);
+            int sc = fscanf(delta_neurons, "%lf\n", &value);
             // printf("id value : %lld %lf\n", j, value);
             layers[i]->delta_neurons[j] = value;
         }

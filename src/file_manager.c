@@ -35,7 +35,7 @@ int load_dataset( char * dirs[], int dir_num, mri_image * dataset, int max_per_f
                 if( strcmp( dir->d_name, ".") == 0 || strcmp( dir->d_name, "..") == 0 ) {
                     continue;
                 }
-                char buf[256];
+                char buf[512];
                 snprintf(buf, sizeof(buf), "%s/%s", dirs[i], dir->d_name);
                 // printf("%s\n",buf); 
                 dataset[n].inputs = (unsigned char *) prepare_image(buf);
