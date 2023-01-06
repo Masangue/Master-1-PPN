@@ -88,6 +88,21 @@ void max_pool_2X2_reduced_size(unsigned char * conv_image, size_t height, size_t
     }
 }
 
+void avg_pool_2X2_reduced_size(unsigned char * conv_image, size_t height, size_t width, unsigned char * pool_image) {
+    int avg = 0;
+    for (size_t i = 0; i < height-1; i+=2) {
+        for (size_t j = 0; j < width-1; j+=2) {
+            avg = 0;
+            for (int ik = 0; ik < 2; ik++) {
+                for (int jk = 0; jk < 2; jk++) {
+                    avg += conv_image[(i+ik)*width + (j+jk)];
+                }
+            }
+            pool_image[(i/2)*(width/2) + (j/2)] = avg/4;
+        }
+    }
+}
+
 int write_ppm(char * filename, unsigned char * tab , size_t dimx, size_t dimy)
 {
     // const int dimx = 800, dimy = 800;
@@ -290,11 +305,11 @@ unsigned char * prepare_image( char * filename ) {
 
 
     /*  first convolution with a kernel filter :
-            1 0 1 0 1
+            1 0 0 0 1
             0 1 0 1 0
-            1 0 1 0 1
+            0 0 1 0 0
             0 1 0 1 0
-            1 0 1 0 1
+            1 0 0 0 1
     */
 
     
@@ -313,6 +328,20 @@ unsigned char * prepare_image( char * filename ) {
             kernel_filter_5x5[i] = 0;
         }   
     }
+    kernel_filter_5x5[2] = 0;
+    kernel_filter_5x5[10] = 0;
+    kernel_filter_5x5[14] = 0;
+    kernel_filter_5x5[22] = 0;
+
+    // printf("\n");
+    // for (size_t i = 0; i < 5*5; i++)
+    // {
+    //     if (i%5 == 0) {
+    //         printf("\n");
+    //     }
+    //     printf("%3d", kernel_filter_5x5[i]);
+    // }
+    // printf("\n");
        
     convolution_5X5(image, image_height, image_width, kernel_filter_5x5, 1, image_conv);
 
@@ -394,17 +423,14 @@ unsigned char * prepare_image( char * filename ) {
 
     // third max pool
 
-    unsigned char * image_pool_3 = malloc((image_width/2) * (image_height/2) * sizeof(unsigned char));
-    if(image_pool_3 == NULL) goto error2;
+    // unsigned char * image_pool_3 = malloc((image_width/2) * (image_height/2) * sizeof(unsigned char));
+    // if(image_pool_3 == NULL) goto error2;
     
-    max_pool_2X2_reduced_size(image_pool_2, image_height, image_width, image_pool_3);
-    
+    // max_pool_2X2_reduced_size(image_pool_2, image_height, image_width, image_pool_3);
 
-
-
-    image_width = image_width/2;
-    image_height = image_height/2;
-    image_size = image_width*image_height;
+    // image_width = image_width/2;
+    // image_height = image_height/2;
+    // image_size = image_width*image_height;
 
     // printf("image size : %ld\n", image_size);
     // printf("image size : %ld\n", image_width);
@@ -422,8 +448,6 @@ unsigned char * prepare_image( char * filename ) {
     // }
     // printf("\n");
 
-    // printf("%lu %lu\n",image_width, image_width);
-
     // printf("\n img size : %lu (%lu x %lu)\n", image_size, image_width, image_height);
 
 
@@ -437,10 +461,10 @@ unsigned char * prepare_image( char * filename ) {
     free(image_conv);
     free(image_pool);
     free(image_conv_2);
-    free(image_pool_2);
+    // free(image_pool_2);
     // free(kernel_filter_3x3);
     free(kernel_filter_5x5);
-    return image_pool_3;
+    return image_pool_2;
 
     error2:
         free(image);
