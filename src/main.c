@@ -1,15 +1,3 @@
-/* 
-This file contains a toy neural network that we will 
-modify and improve to match the problem
-This neural network is inspire from : 
-https://www.cs.bham.ac.uk/~jxb/INC/nn.html
-https://github.com/yaspr/nn
-this NN will predict if the result of an addition (between two number between 0 and 10 ) is true.
-i iterate through the Inputs
-j iterate through the Hiddens
-k iterate through the Outputs
-*/
-
 #include <time.h>
 #include <math.h>
 #include <stdio.h>
@@ -101,6 +89,8 @@ int main(int argc, char *argv[])
     store_nn("storage", layers, nb_layers, neurons_per_layers);
     // load_nn("storage", nb_layers, neurons_per_layers);
 
+
+    // free all and quit
     free_all(layers, nb_layers);
 
     for (size_t i = 0; i < counter; i++) {

@@ -1,6 +1,7 @@
 #include "file_manager.h"
 #include "image_processing.h"
 
+// return the number of file in foldername/ 
 int count_file(char * foldername){
     int counter = 0;
     
@@ -21,6 +22,7 @@ int count_file(char * foldername){
  
 }
 
+// load the dataset with the images from dirs
 int load_dataset( char * dirs[], int dir_num, mri_image * dataset, int max_per_folder ){
     int max_check = 0; //deleteme 
     int n = 0;

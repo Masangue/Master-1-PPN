@@ -9,7 +9,7 @@ f64 d_sigmoid(f64 x) {
     return x * (1 - x);
 }
 
-
+// allocate a layer
 Layer * createLayer( u64 size, u64 next_size ){
     Layer * layer;
     layer = aligned_alloc(64, size * sizeof(Layer) );
@@ -26,6 +26,8 @@ Layer * createLayer( u64 size, u64 next_size ){
     return layer;
 }
 
+
+// init a layer with random value
 void initLayer( Layer * layer, u64 next_size ){
     u64 size = layer->size;
     for( u64 j = 0; j < next_size; j++ ){
@@ -44,6 +46,7 @@ void initLayer( Layer * layer, u64 next_size ){
 }
 
 
+// 
 void computeLayer( Layer * layer1, Layer * layer2 ){
     u64 size = layer1->size;
     u64 next_size = layer2->size;
