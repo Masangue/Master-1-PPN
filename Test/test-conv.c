@@ -7,7 +7,6 @@
 
 #include "image_processing.h"
 
-// Doesnt work
 static void test_convolutions(void **state){
 
     unsigned char img[25] =

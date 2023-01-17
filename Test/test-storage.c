@@ -9,7 +9,6 @@
 #include "nn.h"
 #include "store.h"
 
-// Doesnt work
 static void test_storage(void **state){
     u64 nb_layers = 4;
     u64 neurons_per_layers[10] = {10,20,3,1,1};
@@ -23,6 +22,8 @@ static void test_storage(void **state){
     
     float eps = 0.001;
     assert_float_equal(nn1[0]->weights[0], nn2[0]->weights[0],eps);
+    assert_float_equal(nn1[1]->weights[0], nn2[1]->weights[0],eps);
+    assert_float_equal(nn1[1]->weights[5], nn2[1]->weights[5],eps);
 
     free_all(nn1, nb_layers);
     free_all(nn2, nb_layers);
