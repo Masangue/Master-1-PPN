@@ -1,6 +1,6 @@
 #include "nn.h"
 
-// activations functions
+//  Activations functions
 f64 sigmoid(f64 x) {
     return 1 / (1 + exp(-x) );
 }
@@ -9,7 +9,7 @@ f64 d_sigmoid(f64 x) {
     return x * (1 - x);
 }
 
-// allocate a layer
+//  Allocate a layer
 Layer * createLayer( u64 size, u64 next_size ){
     Layer * layer;
     layer = aligned_alloc(64, size * sizeof(Layer) );
@@ -27,7 +27,7 @@ Layer * createLayer( u64 size, u64 next_size ){
 }
 
 
-// init a layer with random value
+//  Init a layer with random values
 void initLayer( Layer * layer, u64 next_size ){
     u64 size = layer->size;
     for( u64 j = 0; j < next_size; j++ ){
@@ -46,7 +46,7 @@ void initLayer( Layer * layer, u64 next_size ){
 }
 
 
-// 
+//  Applies standard neural computation function
 void computeLayer( Layer * layer1, Layer * layer2 ){
     u64 size = layer1->size;
     u64 next_size = layer2->size;
@@ -62,6 +62,8 @@ void computeLayer( Layer * layer1, Layer * layer2 ){
      
 }
 
+//  First step of the backpropagation process
+//  Computes the output error. 
 f64 computeOutputDelta( Layer * layer, f64 * expected ){
     u64 size = layer->size;
     f64 err = 0.f;
@@ -76,6 +78,9 @@ f64 computeOutputDelta( Layer * layer, f64 * expected ){
     return sqrt(pow(expected[0] - layer->neurons[0],2));
 }
 
+//  Backpropagation process.
+//  Computes the error delta for all neurons of a layer
+//  This function will be called for each layer
 void computeDelta( Layer * layer1, Layer * layer2 ){
 
     u64 size = layer1->size;
@@ -92,7 +97,8 @@ void computeDelta( Layer * layer1, Layer * layer2 ){
 
 }
 
-
+//  Backpropagation process
+//  Changes the weights of all neurons of a layer
 void backpropagate( Layer * layer1, Layer * layer2 ){
     
     u64 size = layer1->size;
@@ -109,6 +115,8 @@ void backpropagate( Layer * layer1, Layer * layer2 ){
     }
 }
 
+// Debugging function
+// Prints the whole NN in a visually clear format
 void debug( Layer * layer, u64 next_size ){
     printf("\n\n");
     printf("neurons : \n");
@@ -139,6 +147,7 @@ void debug( Layer * layer, u64 next_size ){
 
 }
 
+//  General free function, liberating all allocated memory to the NN
 void free_all(Layer ** layers, u64 size)
 {
     for(int i = 0; i<size; i++){
@@ -154,6 +163,7 @@ void free_all(Layer ** layers, u64 size)
     free(layers);
 }
 
+//  Creates and initializes the NN by calling previously defined functions
 Layer ** Init_Neural_network(u64 * neurons_per_layers, u64 nb_layers){
     Layer ** layers = malloc( nb_layers * sizeof(Layer *) );
 
@@ -168,9 +178,7 @@ Layer ** Init_Neural_network(u64 * neurons_per_layers, u64 nb_layers){
     return layers;
 }
 
-
-
-
+//  Shuffles the dataset to prevents pattern redundancy
 void shuffle(u64 size, u64 * tab){
     for( u64 p = 0 ; p < size ; p++ ) { 
         tab[p] = p ;
@@ -184,19 +192,21 @@ void shuffle(u64 size, u64 * tab){
     }
 }
 
-
+//  Fills the input layers with the list of chars representing the image
 void fill_input(Layer * layer, u64 size, u8 * tab){
     for( u64 i = 0; i < size; i++ ){
         layer->neurons[i] = (f64) tab[i] / 20;
     }
 }
 
+//  Wrapper function, computing each layer forward
 void forward_compute(u64 nb_layers, Layer ** layers ){
     for(u64 i = 0; i < nb_layers - 1; i++){
         computeLayer( layers[i], layers[i+1] );
     }
 }
 
+//  Computes the output error, used to compute the cumulated error of the NN
 f64 get_error(Layer * layer, f64 * expected){
     u64 size = layer->size;
     f64 err = 0.f;
@@ -209,6 +219,8 @@ f64 get_error(Layer * layer, f64 * expected){
 
 }
 
+//  Main function of the backpropagation process
+//  Calls the three other backpropagation functions
 void backward_compute(u64 nb_layers, Layer ** layers, f64 * expected ){
 
     computeOutputDelta( layers[nb_layers - 1] , expected );

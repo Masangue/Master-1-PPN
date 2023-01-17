@@ -9,10 +9,11 @@
 
 #include "type.h"
 
+/* mri_image data struct used to manipulate dataset */
 typedef struct {
-    char * filename;
-    int value ;
-    u8 * inputs;
+    char * filename; // Name of current image
+    int value ; // Value from 0 to 3, ranging from NonDemented to ModerateDemented
+    u8 * inputs; // Result of image processing, which will be fed to the input layer of the NN
 } mri_image;
 
 
