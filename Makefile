@@ -12,6 +12,10 @@ prog: main image_processing nn file_manager store
 try: testing image_processing nn file_manager store
 	$(CC) -o test.out build/testing.o build/nn.o build/image_processing.o build/file_manager.o build/store.o $(CFLAGS) $(LDFLAGS)
 
+test : testconv image_processing
+	$(CC) -g build/image_processing.o build/testconv.o $(INCLUDE) -o testconv.out -lcmocka $(CFLAGS) $(LDFLAGS)
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./test
+
 
 
 main: src/main.c
@@ -29,6 +33,9 @@ file_manager: src/file_manager.c
 
 store: src/store.c
 	$(CC) -c -o build/store.o $< $(INCLUDE)  $(CFLAGS)
+
+testconv: src/testconv.c
+	$(CC) -c src/testconv.c -o build/testconv.o -lcmocka $(INCLUDE)  $(CFLAGS)
 
 
 nn: src/nn.c
