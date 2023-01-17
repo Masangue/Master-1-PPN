@@ -44,18 +44,27 @@ nn: src/nn.c
 
 
 ##
-Test : Test_conv
+Test : Test_conv Test_Storage
 	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./test-conv.out
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./test-storage.out
 
 
 ##
-Test_conv : testconv image_processing
-	$(CC) -g build/image_processing.o build/testconv.o -o test-conv.out -lcmocka $(CFLAGS) $(LDFLAGS)
+Test_conv : testConv image_processing
+	$(CC) -g build/image_processing.o build/test-conv.o -o test-conv.out -lcmocka $(CFLAGS) $(LDFLAGS)
+
+Test_Storage : testStorage store nn
+	$(CC) -g build/nn.o build/store.o build/test-storage.o -o test-storage.out -lcmocka $(CFLAGS) $(LDFLAGS)
+
 
 
 ##
-testconv: Test/testconv.c
-	$(CC) -c Test/testconv.c -o build/testconv.o -lcmocka $(INCLUDE)  $(CFLAGS)
+testConv: Test/test-conv.c
+	$(CC) -c Test/test-conv.c -o build/test-conv.o -lcmocka $(INCLUDE)  $(CFLAGS)
+
+testStorage: Test/test-storage.c
+	$(CC) -c Test/test-storage.c -o build/test-storage.o -lcmocka $(INCLUDE)  $(CFLAGS)
+
 
 
 

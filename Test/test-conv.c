@@ -48,6 +48,8 @@ static void test_convolutions(void **state){
     // check with the kernel_five_2
     convolution_5X5( img, 5, 5, kernel_five_2, 1, res );
     assert_int_equal(4, res[0]);
+
+    free(res);
 }
 
 int main(void) {
