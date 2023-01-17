@@ -7,41 +7,51 @@
 
 #include "image_processing.h"
 
-// Doesn't work
+// Doesnt work
 static void test_convolutions(void **state){
 
     unsigned char img[25] =
     {
-        '1', '0', '1', '0', '1',
-        '0', '1', '0', '1', '0',
-        '1', '0', '1', '0', '1',
-        '0', '1', '0', '1', '0',
-        '1', '0', '1', '0', '1'
+        2, 0,88, 0, 2,
+        0, 2, 0, 2, 0,
+        1, 0, 2, 0, 1,
+        0, 2, 0, 2, 0,
+        2, 0, 8, 0, 2
     };
 
-    unsigned char three[9] =
+
+    unsigned char kernel_five_1[25] =
     {
-        '1', '0', '1',
-        '0', '1', '0',
-        '1', '0', '1'
+        1, 0, 0, 0, 1,
+        0, 1, 0, 1, 0,
+        0, 0, 1, 0, 0,
+        0, 1, 0, 1, 0,
+        1, 0, 0, 0, 1
     };
 
-    unsigned char five[25] =
+    unsigned char kernel_five_2[25] =
     {
-        '1', '0', '0', '0', '1',
-        '0', '1', '0', '1', '0',
-        '0', '0', '1', '0', '0',
-        '0', '1', '0', '1', '0',
-        '1', '0', '0', '0', '1'
+        2, 0, 0, 0, 2,
+        0, 2, 0, 2, 0,
+        0, 0, 2, 0, 0,
+        0, 2, 0, 2, 0,
+        2, 0, 0, 0, 2
     };
 
-    unsigned char *res_5x5 = malloc(sizeof(char));
-    convolution_5X5(img,5,5,five,'1',res_5x5);
-    assert_int_equal('9',res_5x5[0]);
+
+    unsigned char *res = malloc( sizeof( unsigned char ) );
+
+    // check with the kernel_five_1
+    convolution_5X5( img, 5, 5, kernel_five_1, 1, res );
+    assert_int_equal(2, res[0]);
+
+    // check with the kernel_five_2
+    convolution_5X5( img, 5, 5, kernel_five_2, 1, res );
+    assert_int_equal(4, res[0]);
 }
 
 int main(void) {
-  int result = '0';
+  int result = 0;
   const struct CMUnitTest tests[] = {
       cmocka_unit_test(test_convolutions),
   };
