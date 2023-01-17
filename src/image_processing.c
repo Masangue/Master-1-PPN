@@ -1,8 +1,8 @@
 /*
 This file contains the image processing for the neurals networks
+All commented code has been left in case of potential future use
 
-
-The use of libspng is inspire from : 
+The use of libspng is inspired by : 
 https://github.com/randy408/libspng/blob/v0.7.2/examples/example.c
 
 
@@ -11,7 +11,7 @@ https://github.com/randy408/libspng/blob/v0.7.2/examples/example.c
 #include "image_processing.h"
 #include "type.h"
 
-
+/*  Convolution using a 3x3 kernel filter (unused at the moment) */
 void convolution_3X3(unsigned char * image, size_t height, size_t width, unsigned char * kernel_filter, /*size_t filter_height, size_t filter_width,*/ int stride, unsigned char * conv_image) {
 
     for (size_t i = 1; i < height-1; i += stride) {
@@ -29,6 +29,7 @@ void convolution_3X3(unsigned char * image, size_t height, size_t width, unsigne
     }
 }
 
+/*  Convolution using a 5x5 kernel filter */
 void convolution_5X5(unsigned char * image, size_t height, size_t width, unsigned char * kernel_filter, /*size_t filter_height, size_t filter_width,*/ int stride, unsigned char * conv_image) {
     size_t filter_id = 0;
     for (size_t i = 0; i < height-4; i += stride) {
@@ -50,6 +51,7 @@ void convolution_5X5(unsigned char * image, size_t height, size_t width, unsigne
     }
 }
 
+/*  Maxpool using a 3x3 sized tile (unused at the moment) */
 void max_pool_3X3(unsigned char * conv_image, size_t height, size_t width, unsigned char * pool_image) {
     int max = 0;
     for (size_t i = 1; i < height-1; i++) {
@@ -67,6 +69,7 @@ void max_pool_3X3(unsigned char * conv_image, size_t height, size_t width, unsig
     }
 }
 
+/*  Maxpool using a 2x2 sized tile */
 void max_pool_2X2_reduced_size(unsigned char * conv_image, size_t height, size_t width, unsigned char * pool_image) {
     int max = 0;
     // printf("h : %ld\n", height);
@@ -88,6 +91,7 @@ void max_pool_2X2_reduced_size(unsigned char * conv_image, size_t height, size_t
     }
 }
 
+/*  Avgpool using a 2x2 sized tile (unused at the moment) */
 void avg_pool_2X2_reduced_size(unsigned char * conv_image, size_t height, size_t width, unsigned char * pool_image) {
     int avg = 0;
     for (size_t i = 0; i < height-1; i+=2) {
@@ -103,6 +107,11 @@ void avg_pool_2X2_reduced_size(unsigned char * conv_image, size_t height, size_t
     }
 }
 
+/*  Creates a ppm image from tab, the currently processed image
+    This function is used for debugging purposes only
+    This code isn't ours, we used the source code located at this url :
+    https://rosettacode.org/wiki/Bitmap/Write_a_PPM_file#C  
+*/
 int write_ppm(char * filename, unsigned char * tab , size_t dimx, size_t dimy)
 {
     // const int dimx = 800, dimy = 800;
@@ -123,6 +132,10 @@ int write_ppm(char * filename, unsigned char * tab , size_t dimx, size_t dimy)
     return EXIT_SUCCESS;
 }
 
+/*  Creates a greyscale version of a colored image
+    By combining each pixel's value from a triple-value (0-255,0-255,0-255)
+    to a single-value (0-255)
+*/
 void rgb_to_grey( unsigned char * image, unsigned char * image_grayscale, size_t grayscale_size  ) {    
     for (size_t i = 0; i < grayscale_size; i++) {
         // classic method
@@ -133,6 +146,7 @@ void rgb_to_grey( unsigned char * image, unsigned char * image_grayscale, size_t
     }
 }
 
+/* Converts a .png file to a pointer of chars using the libspng library */
 int process_img(char *img, unsigned char ** image, size_t * image_size, size_t * image_width, size_t * image_height  ) {
     FILE *png;
     int ret = 0;
@@ -243,6 +257,9 @@ int process_img(char *img, unsigned char ** image, size_t * image_size, size_t *
 
 }
 
+/*  Main image processing function, calling the functions previously
+    defined in this file to process a given file to feed it to the NN
+*/
 unsigned char * prepare_image( char * filename ) {
 
     unsigned char *image = NULL;
@@ -451,8 +468,6 @@ unsigned char * prepare_image( char * filename ) {
     // printf("\n img size : %lu (%lu x %lu)\n", image_size, image_width, image_height);
 
 
-
-    //apercu de l'image
     //write_ppm("test_img", image_pool_2, image_width, image_height);
    
 

@@ -14,6 +14,14 @@
 #define NB_MAX_LAYER   50
 #define NB_MAX_OUTPUTS 50
 
+/*  NN-training function, calling previously defined functions 
+    The function starts by loading the "train" dataset and 
+    proccessing all its files.
+
+    It then feeds them to the NN one by one, recording the error produced at the output
+    and backpropagating it
+    (this part is repeated train_max times)
+*/
 int main(int argc, char *argv[])
 {
 
@@ -87,7 +95,6 @@ int main(int argc, char *argv[])
         cumul_err = 0;
     }
     store_nn("storage", layers, nb_layers, neurons_per_layers);
-    // load_nn("storage", nb_layers, neurons_per_layers);
 
 
     // free all and quit

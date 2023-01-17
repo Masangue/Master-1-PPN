@@ -14,6 +14,9 @@
 #define NB_MAX_LAYER   50
 #define NB_MAX_OUTPUTS 50
 
+/*  NN-testing function, using the "test" dataset 
+    This function is basically the same as the one in main.c,
+    except that it obviously features only one iteration, as it is a test*/
 int main(int argc, char *argv[])
 {
 
