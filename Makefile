@@ -1,6 +1,6 @@
 CC=gcc
 LDFLAGS=  -L./lib/ -lspng -lm
-INCLUDE= -I./lib/ -I./src/
+INCLUDE= -I./lib/ -I./src/ -I./include
 CFLAGS= -g -O2 -march=native
 
 
