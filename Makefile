@@ -1,7 +1,7 @@
 CC=gcc
 LDFLAGS=  -L./lib/ -lspng -lm
 INCLUDE= -I./lib/ -I./src/ -I./include
-CFLAGS= -g -O2 -march=native
+CFLAGS= -g -Ofast -march=native -mtune=native 
 
 
 ##
