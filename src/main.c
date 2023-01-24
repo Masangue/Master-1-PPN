@@ -14,6 +14,32 @@
 #define NB_MAX_LAYER   50
 #define NB_MAX_OUTPUTS 50
 
+void print_input(u8 * inputs){
+for(int h = 0; h < 24; h++){
+                for(int w = 0; w < 20; w++){
+                    int val = inputs[h * 20 + w];
+                    char s;
+                    if( val < 20)
+                        s = ' ';
+                    else if ( val < 50)
+                        s = '.';
+                    else if ( val < 100)
+                        s = ':';
+                    else if ( val < 150)
+                        s = 'o';
+                    else 
+                        s = '%';
+
+
+
+
+                    printf("%c%c%c",s,s,s);
+                }
+            printf("\n"); 
+            }
+            printf("\n\n"); 
+}
+
 /*  NN-training function, calling previously defined functions 
     The function starts by loading the "train" dataset and 
     proccessing all its files.
@@ -36,10 +62,10 @@ int main(int argc, char *argv[])
     int max_per_folder = 100;
 
     u64 nb_layers = 5;
-    u64 neurons_per_layers[NB_MAX_LAYER] = {480,500,200,30,1,1};
+    u64 neurons_per_layers[NB_MAX_LAYER] = {480,500,200,50,1,1};
     u64 input_size = neurons_per_layers[0];
     f64 expected[NB_MAX_OUTPUTS];
-    u64 train_max = 500;
+    u64 train_max = 100;
 
     
     // number of images
@@ -56,7 +82,7 @@ int main(int argc, char *argv[])
 
     printf("dataset filled : %llu\n", counter);
     
-    
+                    
     
     //  Initialise The NN
     Layer ** layers = Init_Neural_network(neurons_per_layers, nb_layers);
@@ -73,7 +99,9 @@ int main(int argc, char *argv[])
         // 
         for( u64 np = 0 ; np < counter ; np++ ) {
             u64 p = random_pattern[np];
-            
+                        
+            // print_input( dataset[p].inputs);
+
             //set input
             fill_input(layers[0], input_size, dataset[p].inputs);
             

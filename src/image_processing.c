@@ -11,9 +11,11 @@ https://github.com/randy408/libspng/blob/v0.7.2/examples/example.c
 #include "image_processing.h"
 #include "type.h"
 #include "global.h"
+#include <stdlib.h>
+#include <string.h>
 
 /*  Convolution using a 3x3 kernel filter (unused at the moment) */
-void convolution_3X3( u8 ** image, u8 ** buffer, size_t *height, size_t *width, u8 * kernel_filter, int stride) {
+void convolution_3X3( u8 ** image, u8 ** buffer, size_t *height, size_t *width, const u8 * kernel_filter, int stride) {
     for ( u64 i = 0; i < *height-2; i += stride) {
         for ( u64 j = 0; j < *width-2; j += stride) {
              
@@ -44,7 +46,7 @@ void convolution_3X3( u8 ** image, u8 ** buffer, size_t *height, size_t *width, 
 
 
 /*  Convolution using a 5x5 kernel filter */
-void convolution_5X5( u8 ** image, u8 ** buffer, size_t *height, size_t *width, u8 * kernel_filter, int stride) {
+void convolution_5X5( u8 ** image, u8 ** buffer, size_t *height, size_t *width, const u8 * kernel_filter, int stride) {
 
     
     for ( u64 i = 0; i < *height-4; i += stride) {
@@ -195,7 +197,7 @@ int write_ppm(char * filename, unsigned char * tab , size_t dimx, size_t dimy)
 
 /* Converts a .png file to a pointer of chars using the libspng library */
 int process_img(char *img, unsigned char ** image, size_t * image_size, size_t * image_width, size_t * image_height  ) 
-{/*o{{*//*{{{*/
+{
     FILE *png;
     int ret = 0;
     spng_ctx *ctx = NULL;
@@ -308,20 +310,21 @@ int process_img(char *img, unsigned char ** image, size_t * image_size, size_t *
         fclose(png);
         return -1;
 
-}/*}}}*//*}}}*/
+}
 
 /*  Main image processing function, calling the functions previously
     defined in this file to process a given file to feed it to the NN
 */
-unsigned char * prepare_image( char * filename ) {
-
-    u8 *image_ptr = NULL;
-    u8 *buffer_ptr = NULL;
+unsigned char * prepare_image( char * filename, u8 * image_ptr, u8 * buffer_ptr ) {
 
     size_t image_size, image_width, image_height;
-
-    image_ptr = malloc( IMAGE_SIZE * sizeof(unsigned char));
-    buffer_ptr = malloc( IMAGE_SIZE * sizeof(unsigned char));
+    //
+    // u8 *image_ptr = NULL;
+    // u8 *buffer_ptr = NULL;
+    //
+    // image_ptr = malloc( IMAGE_SIZE * sizeof(unsigned char));
+    // buffer_ptr = malloc( IMAGE_SIZE * sizeof(unsigned char));
+    //
 
     // open and decode the image
     process_img(filename, &image_ptr, &image_size, &image_width, &image_height);
@@ -334,16 +337,14 @@ unsigned char * prepare_image( char * filename ) {
     convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, kernel_filter_5x5, 1 );
     max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
     max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
-   
-    // write_ppm("image_img.ppm" , image_ptr, image_width, image_height);
+    
+    u8 * inputs = NULL;
+    inputs = aligned_alloc( 64, image_height * image_width * sizeof(u8) );
+    memcpy(inputs, image_ptr, sizeof(u8) * image_height * image_width );
 
-    free(image_ptr);
-    free(buffer_ptr);
-    return image_ptr;
+    return inputs;
 
     error2:
-        free(image_ptr);
-        free(buffer_ptr);
         printf("ERROR");
         exit(-1);
         return NULL;

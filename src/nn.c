@@ -195,7 +195,7 @@ void shuffle(u64 size, u64 * tab){
 //  Fills the input layers with the list of chars representing the image
 void fill_input(Layer * layer, u64 size, u8 * tab){
     for( u64 i = 0; i < size; i++ ){
-        layer->neurons[i] = (f64) tab[i] / 20;
+        layer->neurons[i] = (f64) tab[i] / 255;
     }
 }
 
