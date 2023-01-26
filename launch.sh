@@ -4,7 +4,7 @@ mkdir -p build
 mkdir -p img
 mkdir -p storage
 
-# rm storage/*
+rm storage/*
 
 # gcc -O2 -march=native -g main.c nn.c -o a.out -lm
 # ./a.out > data.dat
@@ -22,4 +22,4 @@ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./prog.out
 gnuplot plot.gp
 
 
-# LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./test.out 
+ # LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./test.out 

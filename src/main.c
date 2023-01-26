@@ -10,34 +10,34 @@
 #include "image_processing.h"
 #include "file_manager.h"
 #include "store.h"  
+#include "evaluation.h" 
 
 #define NB_MAX_LAYER   50
 #define NB_MAX_OUTPUTS 50
 
+// print an ascii art of a 20*24 images
+// this function will be remove or move
 void print_input(u8 * inputs){
-for(int h = 0; h < 24; h++){
-                for(int w = 0; w < 20; w++){
-                    int val = inputs[h * 20 + w];
-                    char s;
-                    if( val < 20)
-                        s = ' ';
-                    else if ( val < 50)
-                        s = '.';
-                    else if ( val < 100)
-                        s = ':';
-                    else if ( val < 150)
-                        s = 'o';
-                    else 
-                        s = '%';
+    for(int h = 0; h < 24; h++){
+        for(int w = 0; w < 20; w++){
+            int val = inputs[h * 20 + w];
+            char s;
+            if( val < 20)
+                s = ' ';
+            else if ( val < 50)
+                s = '.';
+            else if ( val < 100)
+                s = ':';
+            else if ( val < 150)
+                s = 'o';
+            else 
+                s = '%';
 
-
-
-
-                    printf("%c%c%c",s,s,s);
-                }
-            printf("\n"); 
-            }
-            printf("\n\n"); 
+            printf("%c%c%c",s,s,s);
+        }
+    printf("\n"); 
+    }
+    printf("\n\n"); 
 }
 
 /*  NN-training function, calling previously defined functions 
@@ -83,22 +83,27 @@ int main(int argc, char *argv[])
     // fill dataset
     u64 counter = (u64) load_dataset( dirs, num_folder, dataset, max_per_folder);
 
-    printf("dataset filled : %llu\n", counter);
+    printf("dataset filled with %llu images\n", counter);
     
                     
     
     //  Initialise The NN
     Layer ** layers = Init_Neural_network(neurons_per_layers, nb_layers);
-    
-    printf(" id ; err\n");
+    Score score;
+
+    printf(" epoch; precision; recall; accuracy; f1; falsePositiveRate \n");
+    // printf(" id ; err\n");
 
     //  Training
-    for( u64 train_id = 0; train_id < train_max; train_id++ ){
+    for( u64 epoch = 0; epoch < train_max; epoch++ ){
         f64 cumul_err = 0.0f;
-        f64 err = 0.0f; 
+        // f64 err = 0.0f; 
+        initScore(&score);
+
         //randomize dataset
         shuffle(counter, random_pattern);
-      
+        
+        
         // 
         for( u64 np = 0 ; np < counter ; np++ ) {
             u64 p = random_pattern[np];
@@ -115,15 +120,19 @@ int main(int argc, char *argv[])
             forward_compute( nb_layers, layers );
 
             //error
-            err = get_error( layers[nb_layers - 1] , expected );
-            cumul_err += err;
+            // err = get_error( layers[nb_layers - 1] , expected );
+            // cumul_err += err;
+            updateScore(  layers[nb_layers - 1], expected, &score );
+
             
             backward_compute(nb_layers, layers, expected );
         }
         
+        processScore( &score );
+        // printf("%llu, %lf, %lf, %lf, %lf, %lf\n", epoch, score.precision, score.recall, score.accuracy, score.f1, 1 - score.specificity );
         //error
-        printf(" %llu; %lf\n", train_id, cumul_err/counter);
-        cumul_err = 0;
+        // printf(" %llu; %lf\n", train_id, cumul_err/counter);
+        // cumul_err = 0;
     }
     store_nn("storage", layers, nb_layers, neurons_per_layers);
 

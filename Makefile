@@ -9,11 +9,11 @@ all: try prog
 
 
 ##
-prog: main image_processing nn file_manager store
-	$(CC) -o prog.out build/main.o build/nn.o build/image_processing.o build/file_manager.o build/store.o $(CFLAGS) $(LDFLAGS)
+prog: main image_processing nn file_manager store evaluation
+	$(CC) -o prog.out build/main.o build/nn.o build/image_processing.o build/file_manager.o build/store.o build/evaluation.o $(CFLAGS) $(LDFLAGS)
 
-try: testing image_processing nn file_manager store
-	$(CC) -o test.out build/testing.o build/nn.o build/image_processing.o build/file_manager.o build/store.o $(CFLAGS) $(LDFLAGS)
+try: testing image_processing nn file_manager store evaluation
+	$(CC) -o test.out build/testing.o build/nn.o build/image_processing.o build/evaluation.o build/file_manager.o build/store.o $(CFLAGS) $(LDFLAGS)
 
 
 ##
@@ -34,6 +34,9 @@ store: src/store.c
 
 nn: src/nn.c
 	$(CC) -c -o build/nn.o $< $(INCLUDE)  $(CFLAGS)
+
+evaluation: src/evaluation.c
+	$(CC) -c -o build/evaluation.o $< $(INCLUDE)  $(CFLAGS)
 
 
 
