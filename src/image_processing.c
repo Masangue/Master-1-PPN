@@ -13,6 +13,53 @@ https://github.com/randy408/libspng/blob/v0.7.2/examples/example.c
 #include "global.h"
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+
+i32 convolve_baseline( u8 *m, i32 *f, u64 fh, u64 fw, size_t height, size_t width ) {
+    i32 r = 0;
+
+    for (u64 i = 0; i < fh; i++)
+        for (u64 j = 0; j < fw; j++){
+            // printf("gx : %d\n",f[ i * fw + j ]);
+            r += m[ i * width + j ] * f[ i * fw + j ];}
+
+    return r;
+}
+
+//
+void sobel_3X3( u8 ** image, u8 ** buffer, size_t *height, size_t *width, int threshold ) {
+    f64 gx, gy;
+    f32 mag = 0.0;
+
+    i32 f1[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1}; // 3x3 matrix
+
+    i32 f2[9] = {-1, -2, -1, 0, 0, 0, 1, 2, 1}; // 3x3 matrix
+
+    //
+    for (u64 i = 0; i < (*height - 3); i++) {
+        for (u64 j = 0; j < (*width  - 3); j++) {
+            // printf("gx : %d\n", (*image)[ i * (*width) + j ] );
+            gx = convolve_baseline( &( (*image)[ i * (*width) + j ] ), f1, 3, 3, *height, *width );
+            gy = convolve_baseline( &( (*image)[ i * (*width) + j ] ), f2, 3, 3, *height, *width );
+
+            mag = sqrt((gx * gx) + (gy * gy));
+            // printf("gx : %f\n",gy);
+            // printf("gy : %f\n",gx);
+            // printf("mag : %f\n",mag);
+            (*buffer)[ i * (*width-2) + j ] = (mag > threshold) ? 255 : mag;
+        }
+    }
+    // update size
+    *height = *height - 2;
+    *width  = *width  - 2;
+
+    // swap buffer <=> image
+    u8 * tmp;
+    tmp = *image;
+    *image = *buffer;
+    *buffer = tmp;
+
+}
 
 /*  Convolution using a 3x3 kernel filter (unused at the moment) */
 void convolution_3X3( u8 ** image, u8 ** buffer, size_t *height, size_t *width, const u8 * kernel_filter, int stride) {
@@ -330,14 +377,29 @@ unsigned char * prepare_image( char * filename, u8 * image_ptr, u8 * buffer_ptr 
     process_img(filename, &image_ptr, &image_size, &image_width, &image_height);
     
 
-
+    convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5, 1 );
+    max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
+    convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5, 1 );
+    max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
+    max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
       
-    convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, kernel_filter_5x5, 1 );
-    max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
-    convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, kernel_filter_5x5, 1 );
-    max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
-    max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
-    
+ //    convolution_3X3(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_3x3, 1 );
+ //    sobel_3X3( &image_ptr, &buffer_ptr, &image_height, &image_width, 200 );
+ //    avg_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
+ //    convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5, 1 );
+ //    max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
+ //    convolution_3X3(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_3x3, 1 );
+
+    // convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5, 1 );
+    // avg_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
+    // convolution_3X3(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5, 1 );
+    // convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5, 1 );
+  
+    // max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
+   
+    // printf("%ld\n", image_width * image_height);
+    // write_ppm("_ppm.ppm", image_ptr , image_width, image_height);
+    // exit(0);
     u8 * inputs = NULL;
     inputs = aligned_alloc( 64, image_height * image_width * sizeof(u8) );
     memcpy(inputs, image_ptr, sizeof(u8) * image_height * image_width );
