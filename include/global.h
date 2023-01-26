@@ -9,12 +9,22 @@
 
 
 // kernel filters 
-static const u8 kernel_filter_5x5 [25] = {
+static const u8 blur_5x5 [25] = {
   1, 0 , 0 , 0 , 1 ,
   0, 1 , 0 , 1 , 0 ,
   0, 0 , 1 , 0 , 0 ,
   0, 1 , 0 , 1 , 0 ,
   1, 0 , 0 , 0 , 1 
+};
+
+static const u8 blur_3x3 [9] = {
+  1 , 0 , 1 ,
+  0 , 1 , 0 ,
+  1 , 0 , 1 
+};
+
+
+static const u8 sobel_3x3 [9] = {
 };
 
 
