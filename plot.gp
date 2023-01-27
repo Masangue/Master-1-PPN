@@ -1,5 +1,5 @@
 #
-set datafile separator ","
+set datafile separator ";"
 
 
 #set logscale y
@@ -25,7 +25,8 @@ set title title1
 set terminal "png" size 800,400
 set output img1
 
-plot "data.dat" using 1:2 w lp
+plot "data/test.dat" using 1:2 w lp t "test",\
+     "data/train.dat" using 1:2 w lp  t "train" 
 
 
 ###### RECALL ######
@@ -39,7 +40,8 @@ set title title1
 set terminal "png" size 800,400
 set output img1
 
-plot "data.dat" using 1:3 w lp
+plot "data/test.dat" using 1:3 w lp  t "test",\
+     "data/train.dat" using 1:3 w lp t "train" 
 
 
 ###### accuracy ######
@@ -53,7 +55,8 @@ set title title1
 set terminal "png" size 800,400
 set output img1
 
-plot "data.dat" using 1:4 w lp
+plot "data/test.dat" using 1:4 w lp  t "test", \
+     "data/train.dat" using 1:4 w lp t "train" 
 
 
 
@@ -68,7 +71,8 @@ set title title1
 set terminal "png" size 800,400
 set output img1
 
-plot "data.dat" using 1:5 w lp
+plot "data/test.dat" using 1:5 w lp  t "test", \
+     "data/train.dat" using 1:5 w lp t "train" 
 
 
 ###### ROC ######
@@ -82,7 +86,8 @@ set title title1
 set terminal "png" size 800,400
 set output img1
 
-plot "data.dat" using 6:3 w lp
+plot "data/test.dat" using 6:3 w lp  t "test", \
+     "data/train.dat" using 6:3 w lp t "train" 
 
 
 

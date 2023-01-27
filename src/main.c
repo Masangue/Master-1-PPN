@@ -54,9 +54,11 @@ int main(int argc, char *argv[])
     
     srand(time(NULL));
 
-    char * dirs[] = { "dataset/train/NonDemented", "dataset/train/ModerateDemented"};
+    char * trainDirs[] = { "dataset/train/NonDemented", "dataset/train/ModerateDemented"};
+    char * testDirs[]  = { "dataset/test/NonDemented" , "dataset/test/ModerateDemented"};
     
-    
+    FILE * fpTrain = fopen("data/train.dat","w"); 
+    FILE * fpTest = fopen("data/test.dat","w"); 
     
     int num_folder = 2;
     int max_per_folder = 2000;
@@ -72,18 +74,21 @@ int main(int argc, char *argv[])
 
     
     // number of images
-    for( int i = 0; i < 2; i++ ){
-        int num = count_file(dirs[i]);
-        printf(" file in %s :  %d\n", dirs[i],num);
-    }
+    // for( int i = 0; i < 2; i++ ){
+    //     int num = count_file(trainDirs[i]);
+    //     printf(" file in %s :  %d\n", trainDirs[i],num);
+    // }
 
     mri_image * dataset  = malloc( num_folder * max_per_folder * sizeof(mri_image) );
+    mri_image * testDataset  = malloc( num_folder * max_per_folder * sizeof(mri_image) );
     u64 * random_pattern = malloc( num_folder * max_per_folder * sizeof(u64));
     
     // fill dataset
-    u64 counter = (u64) load_dataset( dirs, num_folder, dataset, max_per_folder);
+    u64 train_dataset_size = (u64) load_dataset( trainDirs, num_folder, dataset, max_per_folder);
+    u64 test_dataset_size  = (u64) load_dataset( testDirs, num_folder, testDataset, max_per_folder);
 
-    printf("dataset filled with %llu images\n", counter);
+    printf("Dataset filled with %llu images\n", train_dataset_size);
+    printf("Test dataset filled with %llu images\n", test_dataset_size);
     
                     
     
@@ -92,58 +97,65 @@ int main(int argc, char *argv[])
     Score score;
 
     printf(" epoch; precision; recall; accuracy; f1; falsePositiveRate \n");
-    // printf(" id ; err\n");
+    fprintf(fpTest," epoch; precision; recall; accuracy; f1; falsePositiveRate \n");
+    fprintf(fpTrain," epoch; precision; recall; accuracy; f1; falsePositiveRate \n");
 
     //  Training
     for( u64 epoch = 0; epoch < train_max; epoch++ ){
-        f64 cumul_err = 0.0f;
-        // f64 err = 0.0f; 
         initScore(&score);
-
         //randomize dataset
-        shuffle(counter, random_pattern);
+        shuffle(train_dataset_size, random_pattern);
         
         
-        // 
-        for( u64 np = 0 ; np < counter ; np++ ) {
+        // TRAIN 
+        for( u64 np = 0 ; np < train_dataset_size ; np++ ) {
             u64 p = random_pattern[np];
                         
             // print_input( dataset[p].inputs);
 
-            //set input
-            fill_input(layers[0], input_size, dataset[p].inputs);
-            
-            // set expected
+            fill_input( layers[0], input_size, dataset[p].inputs );
             expected[0] = dataset[p].value;
-
-            // compute
             forward_compute( nb_layers, layers );
-
-            //error
-            // err = get_error( layers[nb_layers - 1] , expected );
-            // cumul_err += err;
             updateScore(  layers[nb_layers - 1], expected, &score );
-
-            
             backward_compute(nb_layers, layers, expected );
+
         }
         
         processScore( &score );
-        // printf("%llu, %lf, %lf, %lf, %lf, %lf\n", epoch, score.precision, score.recall, score.accuracy, score.f1, 1 - score.specificity );
-        //error
-        // printf(" %llu; %lf\n", train_id, cumul_err/counter);
-        // cumul_err = 0;
-    }
-    store_nn("storage", layers, nb_layers, neurons_per_layers);
+        fprintf(fpTrain, "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score.precision, score.recall, score.accuracy, score.f1, 1 - score.specificity );
+        printf( "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score.precision, score.recall, score.accuracy, score.f1, 1 - score.specificity );
+    
+        // TEST
+        initScore(&score);
+        for( u64 np = 0 ; np < test_dataset_size ; np++ ) {
+            u64 p = np;
 
+            fill_input( layers[0], input_size, testDataset[p].inputs );
+            expected[0] = testDataset[p].value;
+            forward_compute( nb_layers, layers );
+            updateScore(  layers[nb_layers - 1], expected, &score );
+        }
+        processScore( &score );
+        fprintf(fpTest, "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score.precision, score.recall, score.accuracy, score.f1, 1 - score.specificity );
+    
+
+    }
+
+    fclose(fpTrain);
+    fclose(fpTest);
+
+    store_nn("storage", layers, nb_layers, neurons_per_layers);
 
     // free all and quit
     free_all(layers, nb_layers);
 
-    for (size_t i = 0; i < counter; i++) {
-        free(dataset[i].inputs);
-    }
+    for (size_t i = 0; i < train_dataset_size; i++)
+        free( dataset[i].inputs );
+    
+    for (size_t i = 0; i < test_dataset_size; i++)
+        free( testDataset[i].inputs );
     
     free(dataset);
+    free(testDataset);
     free(random_pattern);
 }
