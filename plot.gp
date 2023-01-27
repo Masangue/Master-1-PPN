@@ -80,6 +80,11 @@ plot "data/test.dat" using 1:5 w lp  t "test", \
 img1 = "img/roc.png"
 title1 = "ROC"
 
+set ylabel "True positive Rate"
+set xlabel "False Positive Rate" 
+
+
+
 set title title1
 
 ##

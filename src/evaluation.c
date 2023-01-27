@@ -52,9 +52,21 @@ void processScore( Score * score ) {
     int fn = score->false_negative;
     double recall = tp / (double)( tp + fn ); // also sensitivity, also true positive rate
     double specificity = tn / (double) ( tn + fp );
-    double precision =  tp / (double)( tp + fp );
+    double precision =  tp / (double)( tp + fp ); 
     double accuracy = ( tp + tn ) / (double)( tp + tn + fp + fn );
+    double falsePositiveRate = fp / (double) ( fp + tn );
+
+    if( tp + fn == 0)
+        recall = 0;
+    if( tn + tp == 0)
+        specificity = 0;
+    if( tp + fp == 0)
+        precision = 0;
+
     double f1 = 2 * (recall * precision) / ( recall + precision );  
+
+    if( recall + precision == 0)
+        f1 = 0;
     
     // printf(" -> %lf, %lf, %lf, %lf\n", recall, specificity, precision,  accuracy );
     printf(" -> tp : %d, tn : %d, fp : %d, fn : %d\n", tp, tn, fp, fn );
@@ -64,6 +76,6 @@ void processScore( Score * score ) {
     score->recall = recall;
     score->precision = precision;
     score->accuracy = accuracy;
-    score->specificity = specificity;
+    score->specificity = falsePositiveRate;
     score->f1 = f1;
 }

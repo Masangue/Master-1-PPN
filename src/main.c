@@ -122,8 +122,8 @@ int main(int argc, char *argv[])
         }
         
         processScore( &score );
-        fprintf(fpTrain, "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score.precision, score.recall, score.accuracy, score.f1, 1 - score.specificity );
-        printf( "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score.precision, score.recall, score.accuracy, score.f1, 1 - score.specificity );
+        fprintf(fpTrain, "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score.precision, score.recall, score.accuracy, score.f1,  score.specificity );
+        printf( "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score.precision, score.recall, score.accuracy, score.f1,  score.specificity );
     
         // TEST
         initScore(&score);
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
             updateScore(  layers[nb_layers - 1], expected, &score );
         }
         processScore( &score );
-        fprintf(fpTest, "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score.precision, score.recall, score.accuracy, score.f1, 1 - score.specificity );
+        fprintf(fpTest, "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score.precision, score.recall, score.accuracy, score.f1, score.specificity );
     
 
     }
