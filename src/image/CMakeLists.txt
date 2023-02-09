@@ -1,0 +1,17 @@
+set(CURRENT_INCLUDE_DIR ${INCLUDE_DIR}/image)
+
+add_library(IMAGE STATIC
+
+        file_manager.c ${CURRENT_INCLUDE_DIR}/file_manager.h 
+        image_processing.c ${CURRENT_INCLUDE_DIR}/image_processing.h
+
+        ${INCLUDE_DIR}/type.h
+        ${INCLUDE_DIR}/global.h
+        )
+    set_target_properties(IMAGE PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+
+    target_include_directories(IMAGE PUBLIC "${CURRENT_INCLUDE_DIR}" "${INCLUDE_DIR}" )
+    target_link_libraries(IMAGE PUBLIC spng)
+
+
+
