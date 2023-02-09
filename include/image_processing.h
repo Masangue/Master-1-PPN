@@ -8,6 +8,13 @@
 #include <spng.h>
 #include "type.h"
 #include <string.h> 
+#include "type.h"
+#include "global.h"
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+
 
 // int * process_img(char *img);
 unsigned char * prepare_image( char * filename, u8 * image_ptr, u8 * buffer_ptr );

@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     
     srand(time(NULL));
 
-    char * dirs[] = { "dataset/train/NonDemented", "dataset/train/ModerateDemented"};
+    char * dirs[] = { "../dataset/train/NonDemented", "../dataset/train/ModerateDemented"};
     
     
     
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
         printf(" %llu; %lf\n", train_id, cumul_err/counter);
         cumul_err = 0;
     }
-    store_nn("storage", layers, nb_layers, neurons_per_layers);
+    store_nn("../out/storage", layers, nb_layers, neurons_per_layers);
 
 
     // free all and quit

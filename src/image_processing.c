@@ -9,11 +9,6 @@ https://github.com/randy408/libspng/blob/v0.7.2/examples/example.c
 */ 
 
 #include "image_processing.h"
-#include "type.h"
-#include "global.h"
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
 
 i32 convolve_baseline( u8 *m, i32 *f, u64 fh, u64 fw, size_t height, size_t width ) {
     i32 r = 0;

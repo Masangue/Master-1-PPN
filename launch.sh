@@ -1,8 +1,11 @@
 #!/bin/sh
 
 mkdir -p build
-mkdir -p img
-mkdir -p storage
+mkdir -p build/bin
+
+mkdir -p out
+mkdir -p out/storage
+mkdir -p out/img
 
 # rm storage/*
 
@@ -17,9 +20,10 @@ make -B
 # LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib valgrind --log-file="error.txt" ./prog.out
 # LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib valgrind --leak-check=full ./prog.out
 # LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./prog.out > data.dat
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./prog.out 
+# LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./prog.out 
+./prog.out 
 
-gnuplot plot.gp
+# gnuplot plot.gp
 
 
 # LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib ./test.out 

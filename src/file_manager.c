@@ -1,6 +1,4 @@
 #include "file_manager.h"
-#include "image_processing.h"
-#include "global.h"
 
 /*  File counter used in function main */
 int count_file(char * foldername){

@@ -8,6 +8,10 @@
 #include <dirent.h>
 
 #include "type.h"
+#include "image_processing.h"
+#include "global.h"
+
+
 
 /* mri_image data struct used to manipulate dataset */
 typedef struct {

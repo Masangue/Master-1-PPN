@@ -1,6 +1,6 @@
 CC=gcc
-LDFLAGS=  -L./lib/ -lspng -lm
-INCLUDE= -I./lib/ -I./src/ -I./include
+LDFLAGS=   -lspng -lm
+INCLUDE=  -I./src/ -I./include
 CFLAGS= -g -Ofast -march=native -mtune=native 
 
 
@@ -66,14 +66,14 @@ Test_nn : testNn nn
 
 
 ##
-testConv: Test/test-conv.c
-	$(CC) -c Test/test-conv.c -o build/test-conv.o -lcmocka $(INCLUDE)  $(CFLAGS)
+testConv: tests/test-conv.c
+	$(CC) -c tests/test-conv.c -o build/test-conv.o -lcmocka $(INCLUDE)  $(CFLAGS)
 
-testStorage: Test/test-storage.c
-	$(CC) -c Test/test-storage.c -o build/test-storage.o -lcmocka $(INCLUDE)  $(CFLAGS)
+testStorage: tests/test-storage.c
+	$(CC) -c tests/test-storage.c -o build/test-storage.o -lgp filecmocka $(INCLUDE)  $(CFLAGS)
 
-testNn: Test/test-nn.c
-	$(CC) -c Test/test-nn.c -o build/test-nn.o -lcmocka $(INCLUDE) $(CFLAGS)
+testNn: tests/test-nn.c
+	$(CC) -c test/test-nn.c -o build/test-nn.o -lcmocka $(INCLUDE) $(CFLAGS)
 
 
 
