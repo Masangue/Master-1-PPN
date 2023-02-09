@@ -1,6 +1,6 @@
 set(CURRENT_INCLUDE_DIR ${INCLUDE_DIR}/nn)
 
-add_library(NN STATIC
+add_library(neuralNetwork STATIC
         nn.c ${CURRENT_INCLUDE_DIR}/nn.h
         store.c ${CURRENT_INCLUDE_DIR}/store.h
         evaluation.c ${CURRENT_INCLUDE_DIR}/evaluation.h
@@ -9,9 +9,9 @@ add_library(NN STATIC
         ${INCLUDE_DIR}/global.h
         )
 
-    set_target_properties(NN PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set_target_properties(neuralNetwork PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
-    target_include_directories(NN PUBLIC "${CURRENT_INCLUDE_DIR}" "${INCLUDE_DIR}" )
+target_include_directories(neuralNetwork PUBLIC "${CURRENT_INCLUDE_DIR}" "${INCLUDE_DIR}" )
 
 
 

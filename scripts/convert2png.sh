@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# this script is deprecated for now
+
+
+
+
+
  echo "VeryMildDemented"
  for f in $(find dataset/train/VeryMildDemented/. -type f -name "*.jpg"); do convert $f ${f//jpg/png}; done
 

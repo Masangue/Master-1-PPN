@@ -1,3 +1,5 @@
+# this script is deprecated for now
+
 #
 set datafile separator ";"
 
