@@ -4,6 +4,7 @@ add_library(SRC STATIC
         image_processing.c ${CURRENT_INCLUDE_DIR}/image_processing.h
         nn.c ${CURRENT_INCLUDE_DIR}/nn.h
         store.c ${CURRENT_INCLUDE_DIR}/store.h
+        evaluation.c ${CURRENT_INCLUDE_DIR}/evaluation.h
         )
 
 
