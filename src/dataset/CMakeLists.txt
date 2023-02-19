@@ -1,9 +1,7 @@
 set(CURRENT_INCLUDE_DIR ${INCLUDE_DIR}/nn)
 
 add_library(neuralNetwork STATIC
-        nn.c ${CURRENT_INCLUDE_DIR}/nn.h
-        store.c ${CURRENT_INCLUDE_DIR}/store.h
-        evaluation.c ${CURRENT_INCLUDE_DIR}/evaluation.h
+        dataset_manager.c ${CURRENT_INCLUDE_DIR}/dataset_manager.h
  
         ${INCLUDE_DIR}/type.h
         ${INCLUDE_DIR}/global.h

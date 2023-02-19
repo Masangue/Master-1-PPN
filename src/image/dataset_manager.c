@@ -1,4 +1,4 @@
-#include "file_manager.h"
+#include "dataset_manager.h"
 
 /*  File counter used in function main */
 int count_file(char * foldername){
@@ -36,6 +36,7 @@ int load_dataset( char * dirs[], int dir_num, mri_image * dataset, int max_per_f
     image_ptr = malloc( IMAGE_SIZE * sizeof(unsigned char));
     buffer_ptr = malloc( IMAGE_SIZE * sizeof(unsigned char));
 
+    size_t image_size, image_width, image_height;
 
     for( int i = 0; i < dir_num; i++ ){
         DIR *d;
@@ -47,10 +48,10 @@ int load_dataset( char * dirs[], int dir_num, mri_image * dataset, int max_per_f
                 if( strcmp( dir->d_name, ".") == 0 || strcmp( dir->d_name, "..") == 0 ) {
                     continue;
                 }
-                char buf[512];
-                snprintf(buf, sizeof(buf), "%s/%s", dirs[i], dir->d_name);
-
-                dataset[n].inputs = (unsigned char *) prepare_image(buf, image_ptr, buffer_ptr);
+                char image_path[512];
+                snprintf(image_path, sizeof( image_path ), "%s/%s", dirs[i], dir->d_name);
+                load_image( image_path, &image_ptr, &image_size, &image_width, &image_height);
+                dataset[n].inputs = apply_convolution_filters( image_ptr, buffer_ptr, image_width, image_height );
                 dataset[n].value = i;
                 dataset[n].filename = "name";
 

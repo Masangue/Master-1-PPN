@@ -6,7 +6,7 @@
 
 
 #include "type.h"
-#include "nn.h"
+#include "neural_network.h"
 
 void store_nn( char * path, Layer ** nn, u64 nb_layers, u64 * neurons_per_layers );
 Layer ** load_nn( char * path, u64 nb_layers, u64 * neurons_per_layers );

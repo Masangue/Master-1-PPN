@@ -7,8 +7,12 @@
 #include <string.h>
 #include <dirent.h>
 
+
+#include "image_io.h"
+#include "convolution_layer.h"
+
+
 #include "type.h"
-#include "image_processing.h"
 #include "global.h"
 
 

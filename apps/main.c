@@ -6,9 +6,9 @@
 
 
 #include "type.h"
-#include "nn.h"
-#include "image_processing.h"
-#include "file_manager.h"
+#include "neural_network.h"
+#include "convolution_layer.h"
+#include "dataset_manager.h"
 #include "store.h"  
 #include "evaluation.h" 
 

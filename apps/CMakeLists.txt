@@ -1,4 +1,4 @@
 add_executable(main main.c)
 set_target_properties(main PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 target_include_directories(main PUBLIC "${INCLUDE_DIR}")
-target_link_libraries(main PRIVATE neuralNetwork image spng)
+target_link_libraries(main PRIVATE convolution_neural_network neural_network convolution_layer image spng)

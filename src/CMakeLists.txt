@@ -1,5 +1,6 @@
 
 add_subdirectory(image)
-add_subdirectory(nn)
+add_subdirectory(convolution_neural_network)
+# add_subdirectory(dataset)
 
 

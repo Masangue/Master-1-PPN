@@ -1,4 +1,4 @@
-#include "nn.h"
+#include "neural_network.h"
 
 //  Activations functions
 f64 sigmoid(f64 x) {

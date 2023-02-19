@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include "type.h"
-#include "nn.h"
+#include "neural_network.h"
 
 typedef struct {
     double f1;
