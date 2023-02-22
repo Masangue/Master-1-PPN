@@ -95,12 +95,12 @@ Layer ** load_neural_network( char * path, u64 nb_layers, u64 * neurons_per_laye
     Layer ** layers = malloc( nb_layers * sizeof(Layer *) );
 
     for(u64 i = 0; i < nb_layers; i++){
-        layers[i] = createLayer( neurons_per_layers[i], neurons_per_layers[i+1]);
+        layers[i] = create_layer( neurons_per_layers[i], neurons_per_layers[i+1]);
     }
     
     //au cas ou
     for(u64 i = 0; i < nb_layers - 1; i++){
-        initLayer( layers[i], neurons_per_layers[i+1] );
+        init_layer( layers[i], neurons_per_layers[i+1] );
     }
 
 
