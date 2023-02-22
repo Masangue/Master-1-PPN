@@ -15,7 +15,7 @@
 
 int store_image_ppm(char * filename, unsigned char * tab , size_t dimx, size_t dimy);
 
-int load_image(char *img, unsigned char ** image, size_t * image_size, size_t * image_width, size_t * image_height  );
+int load_image(char *img, unsigned char ** image, size_t * image_width, size_t * image_height  );
 
 
 int store_image(char *img, unsigned char ** image, size_t * image_size, size_t * image_width, size_t * image_height  );

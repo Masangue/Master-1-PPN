@@ -233,14 +233,11 @@ unsigned char * apply_convolution_filters( u8 * image_ptr, u8 * buffer_ptr, size
     // printf("%ld\n", image_width * image_height);
     // write_ppm("_ppm.ppm", image_ptr , image_width, image_height);
     // exit(0);
-    u8 * inputs = NULL;
-    inputs = aligned_alloc( 64, image_height * image_width * sizeof(u8) );
+    u8 * inputs = aligned_alloc( 64, image_height * image_width * sizeof(u8) );
     memcpy(inputs, image_ptr, sizeof(u8) * image_height * image_width );
 
     return inputs;
 
-    error2:
-        printf("ERROR");
-        exit(-1);
-        return NULL;
 }
+
+

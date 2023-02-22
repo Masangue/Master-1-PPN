@@ -148,7 +148,7 @@ void debug( Layer * layer, u64 next_size ){
 }
 
 //  General free function, liberating all allocated memory to the NN
-void free_all(Layer ** layers, u64 size)
+void free_neural_network(Layer ** layers, u64 size)
 {
     for(int i = 0; i<size; i++){
         free(layers[i]->bias);

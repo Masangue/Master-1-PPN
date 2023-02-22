@@ -21,11 +21,13 @@ int store_image_ppm(char * filename, unsigned char * tab , size_t dimx, size_t d
     return EXIT_SUCCESS;
 }
 
-int load_image(char *img, unsigned char ** image, size_t * image_size, size_t * image_width, size_t * image_height  ) 
+int load_image(char *img, unsigned char ** image, size_t * image_width, size_t * image_height  ) 
 {
     FILE *png;
     int ret = 0;
     spng_ctx *ctx = NULL;
+    size_t image_size_p;
+    size_t * image_size = &image_size_p;
     // unsigned char *image = NULL;
     // size_t image_size, image_width, image_height;
 
