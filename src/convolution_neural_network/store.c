@@ -1,7 +1,7 @@
 #include "store.h" 
 
 /* Stores a trained NN in a file, in order to be loaded for test */
-void store_nn( char * path, Layer ** layers, u64 nb_layers, u64 * neurons_per_layers ){
+void store_neural_network( char * path, Layer ** layers, u64 nb_layers, u64 * neurons_per_layers ){
     char sbuf[1024];
 
     for(int i = 0; i < nb_layers - 1; i++){
@@ -91,7 +91,7 @@ void store_nn( char * path, Layer ** layers, u64 nb_layers, u64 * neurons_per_la
 }
 
 /* Loads a trained NN from a file, in order to test it */
-Layer ** load_nn( char * path, u64 nb_layers, u64 * neurons_per_layers ){
+Layer ** load_neural_network( char * path, u64 nb_layers, u64 * neurons_per_layers ){
     Layer ** layers = malloc( nb_layers * sizeof(Layer *) );
 
     for(u64 i = 0; i < nb_layers; i++){

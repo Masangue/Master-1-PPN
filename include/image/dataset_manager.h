@@ -37,7 +37,7 @@ typedef struct {
 
 // int load_dataset( char * dirs[], int dir_num, mri_image * dataset, int max_per_folder);
 int load_dataset( char * dirs[], int dir_num, Dataset * dataset, int max_per_folder );
-int count_file(char * foldername);
+int count_file_in_directory(char * foldername);
 
 
 int free_dataset( Dataset * dataset );

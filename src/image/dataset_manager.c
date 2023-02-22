@@ -1,7 +1,7 @@
 #include "dataset_manager.h"
 
 /*  File counter used in function main */
-int count_file(char * foldername){
+int count_file_in_directory(char * foldername){
     int counter = 0;
     
     DIR *d;
@@ -36,12 +36,15 @@ int load_dataset( char * dirs[], int dir_num, Dataset * dataset, int max_per_fol
         d = opendir(dirs[i]);
         if (d) {
             while ((dir = readdir(d)) != NULL && !(folder_counter >= max_per_folder) ) {
-
+                
                 if( strcmp( dir->d_name, ".") == 0 || strcmp( dir->d_name, "..") == 0 ) {
                     continue;
                 }
+
                 char image_path[512];
                 snprintf(image_path, sizeof( image_path ), "%s/%s", dirs[i], dir->d_name);
+
+                
                 dataset->images[total_counter].pixels = malloc( IMAGE_SIZE * sizeof(unsigned char));
                 load_image( image_path, &dataset->images[total_counter].pixels, 
                             &dataset->images[total_counter].original_width, 

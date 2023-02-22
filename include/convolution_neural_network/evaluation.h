@@ -24,6 +24,6 @@ typedef struct {
 } Score;
 
 
-void initScore( Score * score );
-void updateScore( Layer * output_layer, f64 * expected, Score * score );
-void processScore( Score * score );
+void init_score( Score * score );
+void update_score( Layer * output_layer, f64 * expected, Score * score );
+void process_score( Score * score );

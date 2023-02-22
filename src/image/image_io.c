@@ -139,3 +139,27 @@ int load_image(char *img, unsigned char ** image, size_t * image_width, size_t *
 
 }
 
+// print an ascii art of a 20*24 images
+// this function will be remove or move
+void display_ascii_image(u8 * inputs, int width, int height){
+    for(int h = 0; h < height; h++){
+        for(int w = 0; w < width; w++){
+            int val = inputs[h * width + w];
+            char s;
+            if( val < 20)
+                s = ' ';
+            else if ( val < 50)
+                s = '.';
+            else if ( val < 100)
+                s = ':';
+            else if ( val < 150)
+                s = 'o';
+            else 
+                s = '%';
+
+            printf("%c%c%c",s,s,s);
+        }
+    printf("\n"); 
+    }
+    printf("\n\n"); 
+}

@@ -1,5 +1,6 @@
 set(CURRENT_INCLUDE_DIR ${INCLUDE_DIR}/convolution_neural_network)
 set(NN_INCLUDE_DIR ${INCLUDE_DIR}/convolution_neural_network/neural_network)
+set(CL_INCLUDE_DIR ${INCLUDE_DIR}/convolution_neural_network/convolution_layer)
 set(IMAGE_INCLUDE_DIR ${INCLUDE_DIR}/image)
 
 add_library(convolution_neural_network STATIC
@@ -9,6 +10,7 @@ add_library(convolution_neural_network STATIC
  
         ${NN_INCLUDE_DIR}/neural_network.h
         ${IMAGE_INCLUDE_DIR}/dataset_manager.h
+        ${CL_INCLUDE_DIR}/convolution_layer.h
 
         ${INCLUDE_DIR}/type.h
         ${INCLUDE_DIR}/global.h
@@ -19,7 +21,8 @@ set_target_properties(convolution_neural_network  PROPERTIES
 
 target_include_directories(convolution_neural_network PUBLIC 
             "${CURRENT_INCLUDE_DIR}" "${INCLUDE_DIR}" 
-            "${NN_INCLUDE_DIR}" "${IMAGE_INCLUDE_DIR}")
+            "${NN_INCLUDE_DIR}" "${IMAGE_INCLUDE_DIR}"
+            "${CL_INCLUDE_DIR}" )
 
 target_link_libraries(convolution_neural_network PRIVATE 
             neural_network image )

@@ -9,6 +9,7 @@
 #include "global.h"
 
 #include "neural_network.h"
+#include "convolution_layer.h"
 
 #include "evaluation.h" 
 #include "dataset_manager.h" 

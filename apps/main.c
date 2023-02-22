@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     
     u64 nb_layers = 7;
     u64 neurons_per_layers[NB_MAX_LAYER] = {480,64,64,64,64,64,1,1};
-    u64 train_max = 100;
+    u64 epoch_max = 100;
 
     
     // number of images
@@ -74,14 +74,14 @@ int main(int argc, char *argv[])
                     
     
     //  Initialise The NN
-    Layer ** neural_network = Init_Neural_network(neurons_per_layers, nb_layers);
+    Layer ** neural_network = init_neural_network(neurons_per_layers, nb_layers);
 
    
-    train(train_max, 0.01f, &train_dataset, &test_dataset, neural_network, nb_layers, fpTest, fpTrain );
+    train(epoch_max, 0.01f, &train_dataset, &test_dataset, neural_network, nb_layers, fpTest, fpTrain );
 
     fclose(fpTrain);
     fclose(fpTest);
-    store_nn("../out/storage", neural_network, nb_layers, neurons_per_layers);
+    store_neural_network("../out/storage", neural_network, nb_layers, neurons_per_layers);
     
     free_neural_network( neural_network, nb_layers );
     free_dataset( &train_dataset ); 

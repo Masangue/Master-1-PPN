@@ -1,6 +1,6 @@
 #include "evaluation.h" 
 
-void initScore( Score * score ){
+void init_score( Score * score ){
     score->f1 = 0;
     score->precision = 0;
     score->recall = 0;
@@ -15,7 +15,7 @@ void initScore( Score * score ){
 
 }
 
-void updateScore( Layer * output_layer, f64 * expected, Score * score ) {
+void update_score( Layer * output_layer, f64 * expected, Score * score ) {
     u64 size = output_layer->size;
     f64 err = 0;
     for( u64 i = 0; i < size; i++ ){
@@ -45,7 +45,7 @@ void updateScore( Layer * output_layer, f64 * expected, Score * score ) {
 }
 
 
-void processScore( Score * score ) {
+void process_score( Score * score ) {
     int tp = score->true_positive;
     int tn = score->true_negative;
     int fp = score->false_positive;
@@ -54,7 +54,7 @@ void processScore( Score * score ) {
     double specificity = tn / (double) ( tn + fp );
     double precision =  tp / (double)( tp + fp ); 
     double accuracy = ( tp + tn ) / (double)( tp + tn + fp + fn );
-    double falsePositiveRate = fp / (double) ( fp + tn );
+    double false_positive_rate = fp / (double) ( fp + tn );
 
     if( tp + fn == 0)
         recall = 0;
@@ -76,6 +76,6 @@ void processScore( Score * score ) {
     score->recall = recall;
     score->precision = precision;
     score->accuracy = accuracy;
-    score->specificity = falsePositiveRate;
+    score->specificity = false_positive_rate;
     score->f1 = f1;
 }
