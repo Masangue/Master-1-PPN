@@ -8,12 +8,7 @@ https://github.com/randy408/libspng/blob/v0.7.2/examples/example.c
 
 */ 
 
-#include "image_processing.h"
-#include "type.h"
-#include "global.h"
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+#include "convolution_layer.h"
 
 i32 convolve_baseline( u8 *m, i32 *f, u64 fh, u64 fw, size_t height, size_t width ) {
     i32 r = 0;
@@ -203,178 +198,16 @@ void avg_pool_2X2   ( u8 ** image, u8 ** buffer, size_t *height, size_t *width )
 
 }
 
-/*  Creates a ppm image from tab, the currently processed image
-    This function is used for debugging purposes only
-    This code isn't ours, we used the source code located at this url :
-    https://rosettacode.org/wiki/Bitmap/Write_a_PPM_file#C  
-*/
-int write_ppm(char * filename, unsigned char * tab , size_t dimx, size_t dimy)
-{
-    // const int dimx = 800, dimy = 800;
-    int i, j;
-    FILE *fp = fopen(filename, "wb"); /* b - binary mode */
-    (void) fprintf(fp, "P6\n%d %d\n255\n", (int)dimx, (int)dimy);
-    for (j = 0; j < dimy; ++j) {
-        for (i = 0; i < dimx; ++i) {
-            int index = j * dimx + i;
-            static unsigned char color[3];
-            color[0] = tab[index];  /* red */
-            color[1] = tab[index];  /* green */
-            color[2] = tab[index];  /* blue */
-            (void) fwrite(color, 1, 3, fp);
-        }
-    }
-    (void) fclose(fp);
-    return EXIT_SUCCESS;
-}
-
-/*  Creates a greyscale version of a colored image
-    By combining each pixel's value from a triple-value (0-255,0-255,0-255)
-    to a single-value (0-255)
-*/
-// void rgb_to_grey( unsigned char * image, unsigned char * image_grayscale, size_t grayscale_size  ) {    
-//     for (size_t i = 0; i < grayscale_size; i++) {
-//         // classic method
-//         image_grayscale[i] = (image[i*3] + image[i*3+1] + image[i*3+2])/3;
-//
-//         // weighted method
-//         // image_grayscale[i] = (image[i*3]*0.2126 + image[i*3+1]*0.7152 + image[i*3+2]*0.0722);
-//     }
-// }
-
-/* Converts a .png file to a pointer of chars using the libspng library */
-int process_img(char *img, unsigned char ** image, size_t * image_size, size_t * image_width, size_t * image_height  ) 
-{
-    FILE *png;
-    int ret = 0;
-    spng_ctx *ctx = NULL;
-    // unsigned char *image = NULL;
-    // size_t image_size, image_width, image_height;
-
-    png = fopen(img, "rb");
-
-    if(png == NULL)
-    {
-        printf("error opening input file %s\n", img);
-        goto error;
-    }
-
-    ctx = spng_ctx_new(0);
-
-    if(ctx == NULL)
-    {
-        printf("spng_ctx_new() failed\n");
-        goto error;
-    }
-
-    spng_set_crc_action(ctx, SPNG_CRC_USE, SPNG_CRC_USE);
-
-    size_t limit = 1024 * 1024 * 64;
-    spng_set_chunk_limits(ctx, limit, limit);
-
-    spng_set_png_file(ctx, png);
-
-    struct spng_ihdr ihdr;
-    ret = spng_get_ihdr(ctx, &ihdr);
-
-    if(ret)
-    {
-        printf("spng_get_ihdr() error: %s\n", spng_strerror(ret));
-        goto error;
-    }
-
-    struct spng_plte plte = {0};
-    ret = spng_get_plte(ctx, &plte);
-
-    if(ret && ret != SPNG_ECHUNKAVAIL)
-    {
-        printf("spng_get_plte() error: %s\n", spng_strerror(ret));
-        goto error;
-    }
-
-    if(!ret) printf("palette entries: %u\n", plte.n_entries);
-
-    // size_t image_size, image_width, image_height;
-
-    int fmt = SPNG_FMT_PNG;
-
-    if(ihdr.color_type == SPNG_COLOR_TYPE_INDEXED) fmt = SPNG_FMT_RGB8;
-
-    ret = spng_decoded_image_size(ctx, fmt, image_size);
-
-    if(*image_size != IMAGE_SIZE){
-        printf("ERROR : wrong image size");
-        goto error;
-    }
-
-    if(ret) goto error;
-
-    // *image = malloc(*image_size * sizeof(unsigned char));
-
-    if(*image == NULL) goto error;
-
-    ret = spng_decode_image(ctx, NULL, 0, fmt, SPNG_DECODE_PROGRESSIVE);
-
-    if(ret)
-    {
-        printf("progressive spng_decode_image() error: %s\n", spng_strerror(ret));
-        goto error;
-    }
-
-    *image_height = ihdr.height;
-    *image_width = (*image_size) / (*image_height);
-
-    struct spng_row_info row_info = {0};
-
-    do
-    {
-        ret = spng_get_row_info(ctx, &row_info);
-        if(ret) break;
-
-        ret = spng_decode_row(ctx, (*image) + row_info.row_num * (*image_width), *image_width);
-    }
-    while(!ret);    
-
-    if(ret != SPNG_EOI)
-    {
-        printf("progressive decode error: %s\n", spng_strerror(ret));
-
-        if(ihdr.interlace_method)
-            printf("last pass: %d, scanline: %u\n", row_info.pass, row_info.scanline_idx);
-        else
-            printf("last row: %u\n", row_info.row_num);
-    }
-
-    
-    spng_ctx_free(ctx);
-    fclose(png);
-
-    return 0;
-
-    error:
-        spng_ctx_free(ctx);
-        free(*image);
-        fclose(png);
-        return -1;
-
-}
 
 /*  Main image processing function, calling the functions previously
     defined in this file to process a given file to feed it to the NN
 */
-unsigned char * prepare_image( char * filename, u8 * image_ptr, u8 * buffer_ptr ) {
+unsigned char * apply_convolution_filters( u8 * image_ptr, u8 * buffer_ptr, size_t image_width, size_t image_height ) {
 
-    size_t image_size, image_width, image_height;
-    //
-    // u8 *image_ptr = NULL;
-    // u8 *buffer_ptr = NULL;
-    //
-    // image_ptr = malloc( IMAGE_SIZE * sizeof(unsigned char));
-    // buffer_ptr = malloc( IMAGE_SIZE * sizeof(unsigned char));
-    //
+    size_t image_size = image_height * image_width;
 
     // open and decode the image
-    process_img(filename, &image_ptr, &image_size, &image_width, &image_height);
+    // process_img(filename, &image_ptr, &image_size, &image_width, &image_height);
     
 
     convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5, 1 );
@@ -400,14 +233,11 @@ unsigned char * prepare_image( char * filename, u8 * image_ptr, u8 * buffer_ptr 
     // printf("%ld\n", image_width * image_height);
     // write_ppm("_ppm.ppm", image_ptr , image_width, image_height);
     // exit(0);
-    u8 * inputs = NULL;
-    inputs = aligned_alloc( 64, image_height * image_width * sizeof(u8) );
+    u8 * inputs = aligned_alloc( 64, image_height * image_width * sizeof(u8) );
     memcpy(inputs, image_ptr, sizeof(u8) * image_height * image_width );
 
     return inputs;
 
-    error2:
-        printf("ERROR");
-        exit(-1);
-        return NULL;
 }
+
+

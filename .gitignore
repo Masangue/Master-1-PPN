@@ -1,0 +1,7 @@
+out/*
+dataset/*
+build/*
+compile_flags.txt
+*.dat
+*.png
+todo

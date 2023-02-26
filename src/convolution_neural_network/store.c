@@ -1,13 +1,15 @@
 #include "store.h" 
 
 /* Stores a trained NN in a file, in order to be loaded for test */
-void store_nn( char * path, Layer ** layers, u64 nb_layers, u64 * neurons_per_layers ){
+void store_neural_network( Context * context, Layer ** layers ){
     char sbuf[1024];
 
-    for(int i = 0; i < nb_layers - 1; i++){
+    for(int i = 0; i < context->nn_size - 1; i++){
         // Layer * layer = nn[i];
-        u64 next_size = neurons_per_layers[i+1];
-        u64 size = neurons_per_layers[i];
+        u64 next_size = context->topology[i+1];
+        u64 size = context->topology[i];
+
+        const char * path = context->storage_dir;
         // 
         // //
         // sprintf (sbuf, "%s/%d%s", path, i,"bias.dat");
@@ -91,28 +93,31 @@ void store_nn( char * path, Layer ** layers, u64 nb_layers, u64 * neurons_per_la
 }
 
 /* Loads a trained NN from a file, in order to test it */
-Layer ** load_nn( char * path, u64 nb_layers, u64 * neurons_per_layers ){
-    Layer ** layers = malloc( nb_layers * sizeof(Layer *) );
+Layer ** load_neural_network( Context * context  ){
+    int nn_size = context->nn_size;
+    Layer ** layers = malloc( nn_size * sizeof(Layer *) );
 
-    for(u64 i = 0; i < nb_layers; i++){
-        layers[i] = createLayer( neurons_per_layers[i], neurons_per_layers[i+1]);
+    for(u64 i = 0; i < nn_size; i++){
+        layers[i] = create_layer( context->topology[i], context->topology[i+1]);
     }
     
     //au cas ou
-    for(u64 i = 0; i < nb_layers - 1; i++){
-        initLayer( layers[i], neurons_per_layers[i+1] );
+    for(u64 i = 0; i < nn_size - 1; i++){
+        init_layer( layers[i], context->topology[i+1] );
     }
 
 
     char sbuf[1024];
     char test[1024];
 
-    for(int i = 0; i < nb_layers - 1; i++){
-        u64 next_size = neurons_per_layers[i+1];
-        u64 size = neurons_per_layers[i];
+    const char * path = context->storage_dir;
+
+    for(int i = 0; i < nn_size - 1; i++){
+        u64 next_size = context->topology[i+1];
+        u64 size = context->topology[i];
 
         f64 value = 0;
-        
+         
 
 //
         sprintf (sbuf, "%s/%d%s", path, i,"bias.dat");
