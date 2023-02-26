@@ -13,8 +13,9 @@
 
 #include "evaluation.h" 
 #include "dataset_manager.h" 
+#include "context.h" 
 
 
-int train(u64 max_epoch, f64 precision, Dataset * train_dataset, 
+int train(Context * context, Dataset * train_dataset, 
           Dataset * test_dataset, Layer ** neural_network, 
-          u64 nb_layers, FILE * fp_train, FILE * fp_test ) ;
+          FILE * fp_train, FILE * fp_test ) ;

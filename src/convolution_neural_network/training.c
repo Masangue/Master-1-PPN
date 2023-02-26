@@ -1,11 +1,10 @@
 #include "training.h"
-#include <stdio.h>
 
 
 
-int train(u64 max_epoch, f64 precision, Dataset * train_dataset, 
+int train(Context * context, Dataset * train_dataset, 
           Dataset * test_dataset, Layer ** neural_network, 
-          u64 nb_layers, FILE * fp_train, FILE * fp_test ) // TODO cette ligne doit etre suprimee
+          FILE * fp_train, FILE * fp_test ) // TODO cette ligne doit etre suprimee
         {
    
     printf(" epoch; precision; recall; accuracy; f1; falsePositiveRate \n");
@@ -14,7 +13,7 @@ int train(u64 max_epoch, f64 precision, Dataset * train_dataset,
   
     Score score;
     
-    u64 nn_size = nb_layers;
+    u64 nn_size = context->nn_size;
     u64 input_size = neural_network[0]->size;
     u64 output_size = neural_network[nn_size-1]->size;
 
@@ -56,20 +55,20 @@ int train(u64 max_epoch, f64 precision, Dataset * train_dataset,
 
 
     
-    for( u64 epoch = 0; epoch < max_epoch; epoch++ ){
+    for( u64 epoch = 0; epoch < context->max_epoch; epoch++ ){
         init_score(&score);
         shuffle(train_dataset->size, random_pattern);
          
         
         for( u64 np = 0 ; np < train_dataset->size ; np++ ) {
             u64 p = random_pattern[np];
-            display_ascii_image( train_dataset->images[p].inputs, train_dataset->images[p].width, train_dataset->images[p].height );
+            // display_ascii_image( train_dataset->images[p].inputs, train_dataset->images[p].width, train_dataset->images[p].height );
 
             fill_input( neural_network[0], input_size, train_dataset->images[p].inputs );
             expected[0] = train_dataset->images[p].value;
-            forward_compute( nb_layers, neural_network );
+            forward_compute( nn_size, neural_network, context );
             update_score(  neural_network[nn_size - 1], expected, &score );
-            backward_compute(nb_layers, neural_network, expected );
+            backward_compute( neural_network, expected, context );
 
         }
 
@@ -84,8 +83,8 @@ int train(u64 max_epoch, f64 precision, Dataset * train_dataset,
 
             fill_input( neural_network[0], input_size, test_dataset->images[p].inputs );
             expected[0] = test_dataset->images[p].value;
-            forward_compute( nb_layers, neural_network );
-            update_score(  neural_network[nb_layers - 1], expected, &score );
+            forward_compute( nn_size, neural_network, context );
+            update_score(  neural_network[nn_size - 1], expected, &score );
         }
         process_score( &score );
         fprintf(fp_test, "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score.precision, score.recall, score.accuracy, score.f1, score.specificity );

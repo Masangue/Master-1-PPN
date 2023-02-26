@@ -1,6 +1,7 @@
 set(CURRENT_INCLUDE_DIR ${INCLUDE_DIR}/convolution_neural_network)
 set(NN_INCLUDE_DIR ${INCLUDE_DIR}/convolution_neural_network/neural_network)
 set(CL_INCLUDE_DIR ${INCLUDE_DIR}/convolution_neural_network/convolution_layer)
+set(CT_INCLUDE_DIR ${INCLUDE_DIR}/context)
 set(IMAGE_INCLUDE_DIR ${INCLUDE_DIR}/image)
 
 add_library(convolution_neural_network STATIC
@@ -22,10 +23,10 @@ set_target_properties(convolution_neural_network  PROPERTIES
 target_include_directories(convolution_neural_network PUBLIC 
             "${CURRENT_INCLUDE_DIR}" "${INCLUDE_DIR}" 
             "${NN_INCLUDE_DIR}" "${IMAGE_INCLUDE_DIR}"
-            "${CL_INCLUDE_DIR}" )
+            "${CL_INCLUDE_DIR}" "${CT_INCLUDE_DIR}"  )
 
 target_link_libraries(convolution_neural_network PRIVATE 
-            neural_network image )
+            neural_network image context )
 
 add_subdirectory(convolution_layer)
 add_subdirectory(neural_network)

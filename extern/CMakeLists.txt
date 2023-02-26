@@ -8,4 +8,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(libspng)
 
+# Fetch lbconfig
+include(FetchContent)
+FetchContent_Declare(
+  libconfig
+  GIT_REPOSITORY https://github.com/hyperrealm/libconfig.git
+  GIT_TAG        525922a6b49ca19235cdf307376e7c9c539d1b93
+)
+FetchContent_MakeAvailable(libconfig)
+
 

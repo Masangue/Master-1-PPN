@@ -6,9 +6,10 @@
 
 
 #include "type.h"
+#include "context.h"
 
-#define eta 0.5
-#define alpha2 0.3
+// #define eta 0.5
+// #define alpha2 0.3
 
 typedef struct {
     u64   size;
@@ -24,9 +25,9 @@ typedef struct {
 // f64 eta = 0.3;
 
 //neural network
-Layer** init_neural_network(u64 * neurons_per_layers, u64 nb_layers);
-void    forward_compute(u64 nb_layers, Layer ** layers );
-void    backward_compute(u64 nb_layers, Layer ** layers, f64 * expected );
+Layer** init_neural_network(int * neurons_per_layers, u64 nb_layers);
+void    forward_compute(u64 nb_layers, Layer ** layers, Context * context );
+void    backward_compute(Layer ** layers, f64 * expected, Context * context );
 void    free_neural_network(Layer ** layers, u64 size);
 
 
@@ -43,7 +44,7 @@ f64     get_error(Layer * layer, f64 * expected);
 //backward
 f64     compute_Output_delta( Layer * layer, f64 * expected ); 
 void    compute_delta( Layer * layer1, Layer * layer2 );
-void    backpropagate( Layer * layer1, Layer * layer2 );
+void    backpropagate( Layer * layer1, Layer * layer2, f64 eta_, f64 alpha_ );
 
 
 

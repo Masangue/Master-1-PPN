@@ -25,7 +25,7 @@ int count_file_in_directory(char * foldername){
     The function reads the data directory file by file, granting them a value from 0 to 3
     (possible optimization : increase the number of files treated at the same time)
     and sends each file to the prepare_image function for image processing*/
-int load_dataset( char * dirs[], int dir_num, Dataset * dataset, int max_per_folder ){
+int load_dataset( char ** dirs, int dir_num, Dataset * dataset, int max_per_folder ){
 
     int folder_counter = 0;
     int total_counter = 0;
