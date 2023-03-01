@@ -12,6 +12,7 @@ add_library(convolution_neural_network STATIC
         ${NN_INCLUDE_DIR}/neural_network.h
         ${IMAGE_INCLUDE_DIR}/dataset_manager.h
         ${CL_INCLUDE_DIR}/convolution_layer.h
+        ${CT_INCLUDE_DIR}/context.h
 
         ${INCLUDE_DIR}/type.h
         ${INCLUDE_DIR}/global.h

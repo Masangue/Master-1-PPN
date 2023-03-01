@@ -17,5 +17,4 @@
 
 
 int train(Context * context, Dataset * train_dataset, 
-          Dataset * test_dataset, Layer ** neural_network, 
-          FILE * fp_train, FILE * fp_test ) ;
+          Dataset * test_dataset, Layer ** neural_network ) ;

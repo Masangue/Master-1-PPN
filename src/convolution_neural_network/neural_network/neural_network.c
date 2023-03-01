@@ -192,6 +192,13 @@ void shuffle(u64 size, u64 * tab){
     }
 }
 
+
+void    range(u64 size, u64 * tab){
+    for( u64 p = 0 ; p < size ; p++ ) { 
+        tab[p] = p ;
+    }
+}
+
 //  Fills the input layers with the list of chars representing the image
 void fill_input(Layer * layer, u64 size, u8 * tab){
     for( u64 i = 0; i < size; i++ ){

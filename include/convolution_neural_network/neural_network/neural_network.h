@@ -56,6 +56,7 @@ void    debug( Layer * layer, u64 next_size );
 
 //misc
 void    shuffle(u64 size, u64 * tab);
+void    range(u64 size, u64 * tab);
 
 // activations functions
 f64     sigmoid(f64 x);

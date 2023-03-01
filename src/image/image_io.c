@@ -82,6 +82,7 @@ int load_image(char *img, unsigned char ** image, size_t * image_width, size_t *
 
     ret = spng_decoded_image_size(ctx, fmt, image_size);
 
+    // printf("%d x %d  = %llu\n",ihdr.width, ihdr.height, *image_size );
     if(*image_size != IMAGE_SIZE){
         printf("ERROR : wrong image size");
         goto error;

@@ -9,6 +9,7 @@
 
 
 #include "image_io.h"
+#include "context.h"
 
 
 #include "type.h"
@@ -36,9 +37,11 @@ typedef struct {
 } Dataset;
 
 // int load_dataset( char * dirs[], int dir_num, mri_image * dataset, int max_per_folder);
-int load_dataset( char ** dirs, int dir_num, Dataset * dataset, int max_per_folder );
 int count_file_in_directory(char * foldername);
 
+void init_dataset( Dataset * dataset, Context * context );
+int load_dataset( char ** dirs, Dataset * dataset, Context * context );
+int preprocess_dataset( Dataset * dataset, Context * context );
 
 int free_dataset( Dataset * dataset );
 

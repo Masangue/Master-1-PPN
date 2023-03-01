@@ -240,4 +240,3 @@ unsigned char * apply_convolution_filters( u8 * image_ptr, u8 * buffer_ptr, size
 
 }
 
-
