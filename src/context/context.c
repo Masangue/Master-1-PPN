@@ -66,6 +66,16 @@ int load_context( Context * context, char * filename){
     for( int i = 0; i < context->nn_size; i++ ){
         context->topology[i] = config_setting_get_int_elem( setting, i);
     }
+    //nn activatiob function
+    setting = config_lookup ( &cfg, "nn.activation");
+    context->activation_functions = malloc( context->nn_size * sizeof(char *) );
+    for( int i = 0; i < context->nn_size; i++ ){
+        buffer = config_setting_get_string_elem( setting, i);
+        context->activation_functions[i] = malloc( STRING_SIZE * sizeof(char) );
+        strcpy( context->activation_functions[i], buffer );
+    }
+
+
 
     //training
     config_lookup_int(&cfg, "training.do_test",  &context->do_test );
@@ -104,9 +114,14 @@ int info_context( Context * context ){
 
 
     printf("\n");
-    printf(" NN : \n ");
+    printf(" NN topology: \n ");
     for( int i = 0; i < context->nn_size; i++ ){
         printf(" %d ", context->topology[i] );
+    }
+     printf("\n");
+    printf(" NN activations: \n ");
+    for( int i = 0; i < context->nn_size; i++ ){
+        printf(" %s ", context->activation_functions[i] );
     }
     printf("\nnn size : %d \n", context->nn_size);
 

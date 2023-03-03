@@ -1,8 +1,10 @@
 set(CURRENT_INCLUDE_DIR ${INCLUDE_DIR}/context)
+set(NN_INCLUDE_DIR ${INCLUDE_DIR}/convolution_neural_network/neural_network)
 
 add_library(context STATIC
 
         context.c ${CURRENT_INCLUDE_DIR}/context.h
+        ${NN_INCLUDE_DIR}/neural_network.h
 
         ${INCLUDE_DIR}/type.h
         ${INCLUDE_DIR}/global.h

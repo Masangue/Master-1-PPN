@@ -9,6 +9,7 @@
 #include "type.h"
 #include "global.h"
 
+
 #define STRING_SIZE 50
 
 typedef struct {
@@ -27,6 +28,7 @@ typedef struct {
     // nn
     int * topology;
     int nn_size;
+    char ** activation_functions;
 
     // training
     int do_test;

@@ -1,4 +1,6 @@
 #include "training.h"
+#include "neural_network.h"
+#include <stdio.h>
 
 int preprocess_dataset( Dataset * dataset, Context * context ){
 
@@ -28,24 +30,24 @@ int preprocess_dataset( Dataset * dataset, Context * context ){
 }
 
 
-int train_one_epoch( Dataset * dataset, Layer ** neural_network, Context * context, Score * score,u64 * scheduler, FILE * fp, u64 epoch, u64 is_learning ){
+int train_one_epoch( Dataset * dataset, Neural_network * neural_network, Context * context, Score * score,u64 * scheduler, FILE * fp, u64 epoch, u64 is_learning ){
  
-    u64 nn_size = context->nn_size;
-    u64 input_size = neural_network[0]->size;
-    u64 output_size = neural_network[nn_size-1]->size;
+    u64 nn_size = neural_network->size;
+    u64 input_size = neural_network->layers[0].size;
+    // u64 output_size = neural_network->layers[nn_size-1].size;
 
-    f64 expected[output_size]; // redeclare tab each call ?
 
+    init_score(score);
     for( u64 np = 0 ; np < dataset->size ; np++ ) {
        u64 p = scheduler[np];
        // display_ascii_image( train_dataset->images[p].inputs, train_dataset->images[p].width, train_dataset->images[p].height );
 
-       fill_input( neural_network[0], input_size, dataset->images[p].inputs );
-       expected[0] = dataset->images[p].value;
-       forward_compute( nn_size, neural_network, context );
-       update_score(  neural_network[nn_size - 1], expected, score );
+       fill_input( &neural_network->layers[0], input_size, dataset->images[p].inputs );
+       neural_network->expected[0] = dataset->images[p].value;
+       forward_compute( neural_network, context );
+       update_score(  &neural_network->layers[nn_size - 1], neural_network->expected, score );
        if( is_learning)
-           backward_compute( neural_network, expected, context );
+           backward_compute( neural_network, context );
 
     }
 
@@ -61,7 +63,7 @@ int train_one_epoch( Dataset * dataset, Layer ** neural_network, Context * conte
 
 
 int train(Context * context, Dataset * train_dataset, 
-          Dataset * test_dataset, Layer ** neural_network  ) // TODO cette ligne doit etre suprimee
+          Dataset * test_dataset, Neural_network * neural_network  )
         {
    
     FILE * fp_train;
@@ -87,12 +89,19 @@ int train(Context * context, Dataset * train_dataset,
 
     
     for( u64 epoch = 0; epoch < context->max_epoch; epoch++ ){
-        init_score(&score);
         shuffle(train_dataset->size, train_scheduler);
          
         train_one_epoch( train_dataset, neural_network, context, &score, train_scheduler, fp_train, epoch, 1 );
         train_one_epoch( test_dataset,  neural_network, context, &score, test_scheduler,  fp_test,  epoch, 0 );
-        
+       
+        //delete me
+        // for (int i = 0; i < neural_network->size ;i++ ) {
+        //     debug(&neural_network->layers[i], neural_network->layers[i+1].size);
+        //     printf("\n>");
+        //     getchar();
+        // }
+        // printf("\n##");
+        // getchar();
     }
 
     free(test_scheduler);

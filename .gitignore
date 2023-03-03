@@ -1,7 +1,9 @@
 out/*
 dataset/*
+tmp_dataset/*
 build/*
 compile_flags.txt
 *.dat
 *.png
+*.jpg
 todo

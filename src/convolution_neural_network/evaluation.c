@@ -1,4 +1,5 @@
 #include "evaluation.h" 
+#include <stdio.h>
 
 void init_score( Score * score ){
     score->f1 = 0;

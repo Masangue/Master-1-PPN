@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     Context context;
     Dataset train_dataset;
     Dataset test_dataset;
-    Layer ** neural_network;
+    Neural_network * neural_network;
 
     srand(time(NULL));
 
@@ -47,7 +47,8 @@ int main(int argc, char *argv[])
 
     //  Initialise The NN
     neural_network = init_neural_network(context.topology, context.nn_size);
-    
+    prepare_activation( neural_network, &context );
+
     // train
     train( &context, &train_dataset, &test_dataset, neural_network );
 
