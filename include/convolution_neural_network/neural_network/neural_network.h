@@ -12,7 +12,6 @@
 
 
 typedef void activation_function_t(f64 * src, f64 * dst, u64 size) ;
-
 typedef struct {
     u64   size;
     f64 * neurons;
@@ -31,12 +30,13 @@ typedef struct {
     // liste activation
     activation_function_t ** activation_function;
     activation_function_t ** activation_d_function;
+
 } Neural_network;
 
 
 
 //neural network
-Neural_network* init_neural_network(int * neurons_per_layers, u64 nb_layers);
+Neural_network* init_neural_network( Context * context);
 void    forward_compute( Neural_network * neural_network, Context * context );
 void    backward_compute( Neural_network * neural_network, Context * context );
 void    free_neural_network( Neural_network * neural_network, u64 size);

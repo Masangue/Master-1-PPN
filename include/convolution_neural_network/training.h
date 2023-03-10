@@ -8,8 +8,10 @@
 #include "type.h"
 #include "global.h"
 
-#include "neural_network.h"
 #include "convolution_layer.h"
+#include "preprocess_image.h"
+
+#include "neural_network.h"
 
 #include "evaluation.h" 
 #include "dataset_manager.h" 

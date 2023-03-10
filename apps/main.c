@@ -17,6 +17,7 @@
 #define NB_MAX_LAYER   50
 #define NB_MAX_OUTPUTS 50
 
+#include "preprocess_image.h" 
 
 /*  NN-training function, calling previously defined functions 
     The function starts by loading the "train" dataset and 
@@ -38,15 +39,16 @@ int main(int argc, char *argv[])
     // load context
     load_context( &context, "../data/config.cfg" );
     info_context( &context );
+   
 
     // init and fill dataset
     init_dataset( &train_dataset, &context );
     init_dataset( &test_dataset, &context );
     load_dataset( context.train_dirs, &train_dataset, &context);
     load_dataset( context.test_dirs, &test_dataset, &context);
-
-    //  Initialise The NN
-    neural_network = init_neural_network(context.topology, context.nn_size);
+    
+      //  Initialise The NN
+    neural_network = init_neural_network(&context );
     prepare_activation( neural_network, &context );
 
     // train

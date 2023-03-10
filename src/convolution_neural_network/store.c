@@ -97,7 +97,7 @@ void store_neural_network( Context * context, Neural_network * neural_network ){
 /* Loads a trained NN from a file, in order to test it */
 Neural_network * load_neural_network( Context * context  ){
 
-    Neural_network * neural_network = init_neural_network(context->topology, context->nn_size);
+    Neural_network * neural_network = init_neural_network( context );
     int nn_size = neural_network->size;
     Layer * layers = neural_network->layers;
 

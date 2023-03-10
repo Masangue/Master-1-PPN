@@ -9,6 +9,7 @@ https://github.com/randy408/libspng/blob/v0.7.2/examples/example.c
 */ 
 
 #include "convolution_layer.h"
+#include <stdio.h>
 
 i32 convolve_baseline( u8 *m, i32 *f, u64 fh, u64 fw, size_t height, size_t width ) {
     i32 r = 0;
@@ -57,9 +58,9 @@ void sobel_3X3( u8 ** image, u8 ** buffer, size_t *height, size_t *width, int th
 }
 
 /*  Convolution using a 3x3 kernel filter (unused at the moment) */
-void convolution_3X3( u8 ** image, u8 ** buffer, size_t *height, size_t *width, const u8 * kernel_filter, int stride) {
-    for ( u64 i = 0; i < *height-2; i += stride) {
-        for ( u64 j = 0; j < *width-2; j += stride) {
+void convolution_3X3( u8 ** image, u8 ** buffer, size_t *height, size_t *width, const u8 * kernel_filter) {
+    for ( u64 i = 0; i < *height-2; i += 1) {
+        for ( u64 j = 0; j < *width-2; j += 1) {
              
             u64 s = 0;
             for (size_t ik = 0; ik < 3; ik++) {
@@ -88,11 +89,11 @@ void convolution_3X3( u8 ** image, u8 ** buffer, size_t *height, size_t *width, 
 
 
 /*  Convolution using a 5x5 kernel filter */
-void convolution_5X5( u8 ** image, u8 ** buffer, size_t *height, size_t *width, const u8 * kernel_filter, int stride) {
+void convolution_5X5( u8 ** image, u8 ** buffer, size_t *height, size_t *width, const u8 * kernel_filter) {
 
     
-    for ( u64 i = 0; i < *height-4; i += stride) {
-        for ( u64 j = 0; j < *width-4; j += stride) {
+    for ( u64 i = 0; i < *height-4; i += 1) {
+        for ( u64 j = 0; j < *width-4; j += 1) {
              
             u64 s = 0;
             for (size_t ik = 0; ik < 5; ik++) {
@@ -139,7 +140,7 @@ void convolution_5X5( u8 ** image, u8 ** buffer, size_t *height, size_t *width, 
 // }
 
 /*  Maxpool using a 2x2 sized tile */
-void max_pool_2X2   ( u8 ** image, u8 ** buffer, size_t *height, size_t *width ){
+void max_pool_2X2   ( u8 ** image, u8 ** buffer, size_t *height, size_t *width , const u8 * none){
     u8 max = 0;
     u8 val;
     for (u64 i = 0; i < *height - 1; i+=2) {
@@ -171,7 +172,7 @@ void max_pool_2X2   ( u8 ** image, u8 ** buffer, size_t *height, size_t *width )
 }
 
 /*  Avgpool using a 2x2 sized tile (unused at the moment) */
-void avg_pool_2X2   ( u8 ** image, u8 ** buffer, size_t *height, size_t *width ){
+void avg_pool_2X2   ( u8 ** image, u8 ** buffer, size_t *height, size_t *width, const u8 * none){
     f64 avg = 0;
     for (u64 i = 0; i < *height - 1; i+=2) {
         for (u64 j = 0; j < *width - 1; j+=2) {
@@ -202,19 +203,27 @@ void avg_pool_2X2   ( u8 ** image, u8 ** buffer, size_t *height, size_t *width )
 /*  Main image processing function, calling the functions previously
     defined in this file to process a given file to feed it to the NN
 */
-unsigned char * apply_convolution_filters( u8 * image_ptr, u8 * buffer_ptr, size_t image_width, size_t image_height ) {
+unsigned char * apply_convolution_filters( u8 * image_ptr, u8 * buffer_ptr, 
+                                          size_t image_width, size_t image_height, 
+                                          convolution_function_t ** funcs, 
+                                          const u8 ** kernel, u64 number_of_layer ){
 
-    size_t image_size = image_height * image_width;
-
-    // open and decode the image
-    // process_img(filename, &image_ptr, &image_size, &image_width, &image_height);
     
+    for (u64 i = 0; i < number_of_layer; i++) {
+       funcs[i](&image_ptr, &buffer_ptr, &image_height, &image_width, kernel[i]);    
+    }
+    // convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5);
+    // max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width, NULL );
+    // convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5);
+    // max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width, NULL );
+    // max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width, NULL );
 
-    convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5, 1 );
-    max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
-    convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5, 1 );
-    max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
-    max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
+    u8 * inputs = aligned_alloc( 64, image_height * image_width * sizeof(u8) );
+    memcpy(inputs, image_ptr, sizeof(u8) * image_height * image_width );
+
+    return inputs;
+
+
       
  //    convolution_3X3(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_3x3, 1 );
  //    sobel_3X3( &image_ptr, &buffer_ptr, &image_height, &image_width, 200 );
@@ -233,10 +242,5 @@ unsigned char * apply_convolution_filters( u8 * image_ptr, u8 * buffer_ptr, size
     // printf("%ld\n", image_width * image_height);
     // write_ppm("_ppm.ppm", image_ptr , image_width, image_height);
     // exit(0);
-    u8 * inputs = aligned_alloc( 64, image_height * image_width * sizeof(u8) );
-    memcpy(inputs, image_ptr, sizeof(u8) * image_height * image_width );
-
-    return inputs;
-
-}
+    }
 

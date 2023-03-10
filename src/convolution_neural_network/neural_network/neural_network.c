@@ -1,4 +1,6 @@
 #include "neural_network.h"
+#include "preprocess_image.h"
+#include <stdio.h>
 
 
 
@@ -63,25 +65,58 @@ void free_neural_network(Neural_network * neural_network, u64 size)
 }
 
 //  Creates and initializes the NN by calling previously defined functions
-Neural_network * init_neural_network(int * neurons_per_layers, u64 nn_size ){
+Neural_network * init_neural_network( Context * context ){
+    
+    u64 nn_size = context->nn_size;
+    u64 input_size = input_size_from_context(context );
+    u64 output_size = 1;
 
+    u64 * topology = malloc( (nn_size+1)  * sizeof(u64) );
+    topology[0] = input_size;
+    for(u64 i = 1; i < nn_size-1; i++){
+        topology[i] = context->topology[i-1];
+    }
+    topology[nn_size-1] = output_size;
+    topology[nn_size] = 1;
+
+    
     Neural_network * neural_network = malloc( sizeof(Neural_network) );
     neural_network->size = nn_size;
-    neural_network->layers = malloc( nn_size * sizeof(Layer) );
-    neural_network->expected = malloc( neurons_per_layers[nn_size - 1] * sizeof( f64 ) );
+    neural_network->layers = malloc( nn_size  * sizeof(Layer) );
+    neural_network->expected = malloc( output_size * sizeof( f64 ) );
     
     neural_network->activation_function = malloc( nn_size * sizeof(activation_function_t*) );
     neural_network->activation_d_function = malloc( nn_size * sizeof(activation_function_t*) );
 
+    printf("\n");
     for(u64 i = 0; i < nn_size; i++){
         create_layer( &neural_network->layers[i], 
-                    neurons_per_layers[i], neurons_per_layers[i+1] );
+                    topology[i], topology[i+1] );
+        printf(" %llu ", topology[i] );
     }
+    printf("\n");
 
     for(u64 i = 0; i < nn_size - 1; i++){
-        init_layer( &neural_network->layers[i], neurons_per_layers[i+1] );
+        init_layer( &neural_network->layers[i], topology[i+1] );
     }
 
+    // // creation
+    // create_layer( &neural_network->layers[0], input_size, topology[0] );
+    // for(u64 i = 0; i < nn_size-3; i++){ //not working if nn_size = 2
+    //     create_layer( &neural_network->layers[i+1], 
+    //                 topology[i], topology[i+1] );
+    // }
+    // create_layer( &neural_network->layers[nn_size-2], topology[nn_size-3], output_size );
+    // create_layer( &neural_network->layers[nn_size-1], output_size, output_size );
+    //
+    // 
+    // // init
+    // init_layer( &neural_network->layers[0], topology[0] );
+    // for(u64 i = 0; i < nn_size - 2; i++){
+    //     init_layer( &neural_network->layers[i+1], topology[i+1] );
+    // }
+    // init_layer( &neural_network->layers[nn_size-1], output_size );
+    //
     return neural_network;
 }
 
@@ -147,11 +182,12 @@ f64 compute_output_delta( Layer * layer, f64 * expected, activation_function_t *
 
         // layer->delta_neurons[i] = ( expected[i] - layer->neurons[i] ) 
                                 // * d_sigmoid( layer->neurons[i] );
-        layer->delta_neurons[i] = ( expected[i] - layer->neurons[i] ) ;
+        layer->delta_neurons[i] =  ( expected[i] - layer->neurons[i] ) ;
     }
 
     //delta_neurons = delta_neurons * d_sigmoid( neurons );
     activation( layer->neurons, layer->delta_neurons, size );
+    // printf("expected  : %f ---  neuron : %f ---  deltaNeuron : %f\n", expected[0] , layer->neurons[0], layer->delta_neurons[0]);
     return 0;
 }
 
@@ -207,7 +243,7 @@ void backpropagate( Layer * layer1, Layer * layer2, f64 eta_, f64 alpha_ ){
 void forward_compute( Neural_network * neural_network , Context * context ){
     for(u64 i = 0; i < neural_network->size - 1; i++){
         compute_layer( &neural_network->layers[i], &neural_network->layers[i+1],
-                      neural_network->activation_function[i] );
+                      neural_network->activation_function[i+1] );
     }
 }
 
@@ -216,6 +252,7 @@ void forward_compute( Neural_network * neural_network , Context * context ){
 void backward_compute( Neural_network * neural_network, Context * context ){
     
     u64 nn_size = neural_network->size;
+    // printf(" size %llu \n", nn_size);
     compute_output_delta( &neural_network->layers[nn_size - 1] , 
                          neural_network->expected, 
                          neural_network->activation_d_function[nn_size - 1] );
@@ -242,9 +279,9 @@ void backward_compute( Neural_network * neural_network, Context * context ){
 // Prints the whole NN in a visually clear format
 void debug( Layer * layer, u64 next_size ){
     printf("\n\n");
-    // printf("neurons : \n");
-    // for( u64 i = 0; i < layer->size; i++)
-    //     printf("%lf ", layer->neurons[i]);
+    printf("neurons : \n");
+    for( u64 i = 0; i < layer->size; i++)
+        printf("%lf ", layer->neurons[i]);
     // 
     // printf("\n\n");
     // printf("weights : \n");
@@ -266,7 +303,7 @@ void debug( Layer * layer, u64 next_size ){
     printf("\n\n");
     printf("delta neurons : \n");
     for( u64 i = 0; i < layer->size; i++)
-        printf("%lf \n", layer->delta_neurons[i]);
+        printf("%lf ", layer->delta_neurons[i]);
     
 
 }

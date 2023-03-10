@@ -15,7 +15,7 @@ set_target_properties(image PROPERTIES
 target_include_directories(image PUBLIC "${CURRENT_INCLUDE_DIR}"
                 "${INCLUDE_DIR}" "${CT_INCLUDE_DIR}" )
 
-target_link_libraries(image PUBLIC spng convolution_layer context )
+target_link_libraries(image PUBLIC spng context )
 
 
 

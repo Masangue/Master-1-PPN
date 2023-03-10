@@ -1,33 +1,4 @@
 #include "training.h"
-#include "neural_network.h"
-#include <stdio.h>
-
-int preprocess_dataset( Dataset * dataset, Context * context ){
-
-    u8 *image_ptr = NULL;
-    u8 *buffer_ptr = NULL;
-
-    image_ptr  = malloc( IMAGE_SIZE * sizeof(unsigned char));
-    buffer_ptr = malloc( IMAGE_SIZE * sizeof(unsigned char));
-
-
-    for( u64 i  = 0; i < dataset->size; i++ ){
-
-        memcpy(image_ptr, dataset->images[i].pixels, sizeof(u8) *  
-               dataset->images[i].width * dataset->images[i].height);
-
-        dataset->images[i].inputs = apply_convolution_filters(
-                image_ptr, buffer_ptr, 
-                dataset->images[i].width, 
-                dataset->images[i].height );
-    }
-    
-    free(image_ptr);
-    free(buffer_ptr);
-
-
-    return 0;
-}
 
 
 int train_one_epoch( Dataset * dataset, Neural_network * neural_network, Context * context, Score * score,u64 * scheduler, FILE * fp, u64 epoch, u64 is_learning ){
@@ -46,8 +17,9 @@ int train_one_epoch( Dataset * dataset, Neural_network * neural_network, Context
        neural_network->expected[0] = dataset->images[p].value;
        forward_compute( neural_network, context );
        update_score(  &neural_network->layers[nn_size - 1], neural_network->expected, score );
-       if( is_learning)
+       if( is_learning){
            backward_compute( neural_network, context );
+                    }
 
     }
 
@@ -94,15 +66,7 @@ int train(Context * context, Dataset * train_dataset,
         train_one_epoch( train_dataset, neural_network, context, &score, train_scheduler, fp_train, epoch, 1 );
         train_one_epoch( test_dataset,  neural_network, context, &score, test_scheduler,  fp_test,  epoch, 0 );
        
-        //delete me
-        // for (int i = 0; i < neural_network->size ;i++ ) {
-        //     debug(&neural_network->layers[i], neural_network->layers[i+1].size);
-        //     printf("\n>");
-        //     getchar();
-        // }
-        // printf("\n##");
-        // getchar();
-    }
+        }
 
     free(test_scheduler);
     free(train_scheduler);

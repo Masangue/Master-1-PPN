@@ -11,6 +11,11 @@
 
 
 #define STRING_SIZE 50
+typedef struct {
+    char * func;
+    int size;
+    char * kernel;
+} convolution_descriptor ;
 
 typedef struct {
     char * context_path;
@@ -37,10 +42,11 @@ typedef struct {
     double alpha_;
     double eta_;
  
-    //
+    // convolution
     int width;
     int height;
-    int filters; // TODO
+    int convo_size;
+    convolution_descriptor * convo;
 
 } Context;
 
