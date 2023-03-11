@@ -1,13 +1,13 @@
 #include "training.h"
 
 
-int train_one_epoch( Dataset * dataset, Neural_network * neural_network, Context * context, Score * score,u64 * scheduler, FILE * fp, u64 epoch, u64 is_learning ){
+f64 train_one_epoch( Dataset * dataset, Neural_network * neural_network, Context * context, Score * score,u64 * scheduler, FILE * fp, u64 epoch, u64 is_learning ){
  
     u64 nn_size = neural_network->size;
     u64 input_size = neural_network->layers[0].size;
     // u64 output_size = neural_network->layers[nn_size-1].size;
 
-
+    
     init_score(score);
     for( u64 np = 0 ; np < dataset->size ; np++ ) {
        u64 p = scheduler[np];
@@ -19,7 +19,7 @@ int train_one_epoch( Dataset * dataset, Neural_network * neural_network, Context
        update_score(  &neural_network->layers[nn_size - 1], neural_network->expected, score );
        if( is_learning){
            backward_compute( neural_network, context );
-                    }
+        }
 
     }
 
@@ -30,7 +30,7 @@ int train_one_epoch( Dataset * dataset, Neural_network * neural_network, Context
     printf( "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score->precision, score->recall, score->accuracy, score->f1,  score->specificity );
     
 
-    return 0;
+    return score->f1;
 }
 
 
@@ -59,13 +59,13 @@ int train(Context * context, Dataset * train_dataset,
     preprocess_dataset( test_dataset, context );
 
 
-    
-    for( u64 epoch = 0; epoch < context->max_epoch; epoch++ ){
+    float training_score = 0; 
+    for( u64 epoch = 0; epoch < context->max_epoch && training_score + context->precision < 1; epoch++ ){
         shuffle(train_dataset->size, train_scheduler);
          
-        train_one_epoch( train_dataset, neural_network, context, &score, train_scheduler, fp_train, epoch, 1 );
+        training_score = train_one_epoch( train_dataset, neural_network, context, &score, train_scheduler, fp_train, epoch, 1 );
         train_one_epoch( test_dataset,  neural_network, context, &score, test_scheduler,  fp_test,  epoch, 0 );
-       
+        
         }
 
     free(test_scheduler);

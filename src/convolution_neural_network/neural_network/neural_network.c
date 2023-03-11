@@ -182,11 +182,12 @@ f64 compute_output_delta( Layer * layer, f64 * expected, activation_function_t *
 
         // layer->delta_neurons[i] = ( expected[i] - layer->neurons[i] ) 
                                 // * d_sigmoid( layer->neurons[i] );
-        layer->delta_neurons[i] =  ( expected[i] - layer->neurons[i] ) ;
+        // layer->delta_neurons[i] =  - ( expected[i] - layer->neurons[i] ) ;
+        layer->delta_neurons[i] =  layer->neurons[i] - expected[i]   ;
     }
 
     //delta_neurons = delta_neurons * d_sigmoid( neurons );
-    activation( layer->neurons, layer->delta_neurons, size );
+    // activation( layer->neurons, layer->delta_neurons, size );
     // printf("expected  : %f ---  neuron : %f ---  deltaNeuron : %f\n", expected[0] , layer->neurons[0], layer->delta_neurons[0]);
     return 0;
 }
@@ -209,6 +210,7 @@ void compute_delta( Layer * layer1, Layer * layer2, activation_function_t * acti
         layer1->delta_neurons[i] = s ;
     }
 
+    //delta_neurons = delta_neurons * d_sigmoid( neurons );
     activation( layer1->neurons,  layer1->delta_neurons, size );
 
 }
@@ -220,14 +222,14 @@ void backpropagate( Layer * layer1, Layer * layer2, f64 eta_, f64 alpha_ ){
     
     u64 size = layer1->size;
     u64 next_size = layer2->size;
-    
+     
     for( u64 j = 0; j < next_size; j++){
-        layer1->delta_bias[j] = eta_ * layer2->delta_neurons[j] + alpha_ * layer1->delta_bias[j];
-        layer1->bias[j] += layer1->delta_bias[j];
+        layer1->delta_bias[j] = (1.f/size) * eta_ * layer2->delta_neurons[j] + alpha_ * layer1->delta_bias[j];
+        layer1->bias[j] -= layer1->delta_bias[j];
         for( u64 i = 0; i < size; i++){
-            layer1->delta_weights[j * size + i] = eta_ * layer1->neurons[i] * layer2->delta_neurons[j] + 
+            layer1->delta_weights[j * size + i] = (1.f/size) * eta_ * layer1->neurons[i] * layer2->delta_neurons[j] + 
                                                   alpha_ * layer1->delta_weights[j * size + i];
-            layer1->weights[ j * size + i] += layer1->delta_weights[j * size + i];
+            layer1->weights[ j * size + i] -= layer1->delta_weights[j * size + i];
         }
     }
 }
@@ -370,6 +372,10 @@ void prepare_activation( Neural_network * neural_network, Context * context){
         else if(strcmp(context->activation_functions[i], "relu")==0){
             neural_network->activation_function[i] = &apply_relu;
             neural_network->activation_d_function[i] = &apply_d_relu;
+        }
+        else if(strcmp(context->activation_functions[i], "lrelu")==0){
+            neural_network->activation_function[i] = &apply_leaky_relu;
+            neural_network->activation_d_function[i] = &apply_d_leaky_relu;
         }
         else {
             neural_network->activation_function[i] = &apply_sigmoid;

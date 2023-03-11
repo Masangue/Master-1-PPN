@@ -90,7 +90,7 @@ set xlabel "False Positive Rate"
 set title title1
 
 ##
-set terminal "png" size 800,400
+set terminal "png" size 450,400
 set output img1
 
 plot "out/data/test.dat" using 6:3 w p  t "test", \

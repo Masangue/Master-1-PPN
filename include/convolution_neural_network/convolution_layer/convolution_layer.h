@@ -10,6 +10,7 @@
 
 #include "type.h"
 #include "global.h"
+#include "image_io.h"
 
 
 typedef void convolution_function_t( u8 ** image, u8 ** buffer, 
