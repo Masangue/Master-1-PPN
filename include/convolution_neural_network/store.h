@@ -9,5 +9,5 @@
 #include "neural_network.h"
 #include "context.h"
 
-void store_neural_network( Context * context, Layer ** layers );
-Layer ** load_neural_network( Context * context  );
+void store_neural_network( Context * context, Neural_network * neural_network );
+Neural_network * load_neural_network( Context * context  );

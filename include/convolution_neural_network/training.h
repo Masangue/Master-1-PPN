@@ -8,8 +8,10 @@
 #include "type.h"
 #include "global.h"
 
-#include "neural_network.h"
 #include "convolution_layer.h"
+#include "preprocess_image.h"
+
+#include "neural_network.h"
 
 #include "evaluation.h" 
 #include "dataset_manager.h" 
@@ -17,5 +19,4 @@
 
 
 int train(Context * context, Dataset * train_dataset, 
-          Dataset * test_dataset, Layer ** neural_network, 
-          FILE * fp_train, FILE * fp_test ) ;
+          Dataset * test_dataset, Neural_network * neural_network ) ;

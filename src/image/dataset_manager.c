@@ -1,4 +1,17 @@
 #include "dataset_manager.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+void init_dataset( Dataset * dataset, Context * context ){
+    
+    int num_folder = 2;
+    int max_per_folder = context->max_per_folder;
+
+
+    dataset->size = num_folder * max_per_folder;  
+    dataset->images = malloc( dataset->size * sizeof(mri_image) );
+}
+
 
 /*  File counter used in function main */
 int count_file_in_directory(char * foldername){
@@ -25,12 +38,16 @@ int count_file_in_directory(char * foldername){
     The function reads the data directory file by file, granting them a value from 0 to 3
     (possible optimization : increase the number of files treated at the same time)
     and sends each file to the prepare_image function for image processing*/
-int load_dataset( char ** dirs, int dir_num, Dataset * dataset, int max_per_folder ){
+int load_dataset( char ** dirs, Dataset * dataset, Context * context ){
+
+    int num_folder = 2;
+    int max_per_folder = context->max_per_folder;
+
 
     int folder_counter = 0;
     int total_counter = 0;
 
-    for( int i = 0; i < dir_num; i++ ){
+    for( int i = 0; i < num_folder; i++ ){
         DIR *d;
         struct dirent *dir;
         d = opendir(dirs[i]);
@@ -53,6 +70,8 @@ int load_dataset( char ** dirs, int dir_num, Dataset * dataset, int max_per_fold
                 dataset->images[total_counter].filename = "name";
                 dataset->images[total_counter].width  = dataset->images[total_counter].original_width;
                 dataset->images[total_counter].height = dataset->images[total_counter].original_height;
+                // printf("\n%lu x %lu \n",dataset->images[total_counter].width, dataset->images[total_counter].height );
+
 
                 total_counter++;
                 folder_counter++; 
@@ -65,7 +84,10 @@ int load_dataset( char ** dirs, int dir_num, Dataset * dataset, int max_per_fold
             exit(0);
         }
     }
+    //update dataset size to its true value
     dataset->size = total_counter; 
+
+    printf("Dataset filled with %d images\n", total_counter );
     return total_counter;
 }
 
@@ -86,3 +108,5 @@ int free_dataset( Dataset * dataset ){
     free( dataset->images );
     return 0;
 }
+
+

@@ -9,9 +9,14 @@ add_library(convolution_neural_network STATIC
         evaluation.c ${CURRENT_INCLUDE_DIR}/evaluation.h
         training.c ${CURRENT_INCLUDE_DIR}/training.h
  
-        ${NN_INCLUDE_DIR}/neural_network.h
+        neural_network/neural_network.c ${NN_INCLUDE_DIR}/neural_network.h
+        neural_network/activation.c ${NN_INCLUDE_DIR}/activation.h
+
+        convolution_layer/convolution_layer.c ${CL_INCLUDE_DIR}/convolution_layer.h
+        convolution_layer/preprocess_image.c ${CL_INCLUDE_DIR}/preprocess_image.h
+
         ${IMAGE_INCLUDE_DIR}/dataset_manager.h
-        ${CL_INCLUDE_DIR}/convolution_layer.h
+        ${CT_INCLUDE_DIR}/context.h
 
         ${INCLUDE_DIR}/type.h
         ${INCLUDE_DIR}/global.h
@@ -26,8 +31,8 @@ target_include_directories(convolution_neural_network PUBLIC
             "${CL_INCLUDE_DIR}" "${CT_INCLUDE_DIR}"  )
 
 target_link_libraries(convolution_neural_network PRIVATE 
-            neural_network image context )
+             image context )
 
-add_subdirectory(convolution_layer)
-add_subdirectory(neural_network)
+# add_subdirectory(convolution_layer)
+# add_subdirectory(neural_network)
 
