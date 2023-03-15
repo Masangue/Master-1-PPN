@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
 
     // free
-    free_neural_network( neural_network, context.nn_size );
+    free_neural_network( neural_network  );
     free_dataset( &train_dataset ); 
     free_dataset( &test_dataset ); 
     free_context( &context ); 

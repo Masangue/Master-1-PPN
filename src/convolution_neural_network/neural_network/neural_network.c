@@ -1,5 +1,4 @@
 #include "neural_network.h"
-#include "preprocess_image.h"
 #include <stdio.h>
 
 
@@ -10,22 +9,24 @@
 
 
 //  Allocate a layer
-void create_layer( Layer * layer, u64 size, u64 next_size ){
+void create_layer( Layer * layer, u64 size, u64 next_size, u64 batch_size ){
     layer->size = size;
+    layer->batch_neurons       = aligned_alloc(64, size * batch_size * sizeof(f64) );
+    layer->weights       = aligned_alloc(64, size * next_size  * sizeof(f64) );
+    layer->bias          = aligned_alloc(64, next_size *         sizeof(f64) );
 
-    layer->neurons       = aligned_alloc(64, size *             sizeof(f64) );
-    layer->weights       = aligned_alloc(64, size * next_size * sizeof(f64) );
-    layer->bias          = aligned_alloc(64, next_size *        sizeof(f64) );
+    layer->batch_delta_neurons = aligned_alloc(64, size * batch_size * sizeof(f64) );
+    layer->delta_weights = aligned_alloc(64, size * next_size  * sizeof(f64) );
+    layer->delta_bias    = aligned_alloc(64, next_size *         sizeof(f64) );
 
-    layer->delta_neurons = aligned_alloc(64, size *             sizeof(f64) );
-    layer->delta_weights = aligned_alloc(64, size * next_size * sizeof(f64) );
-    layer->delta_bias    = aligned_alloc(64, next_size *        sizeof(f64) );
+    layer->neurons = layer->batch_neurons;
+    layer->delta_neurons = layer->batch_delta_neurons;
 
 }
 
 
 //  Init a layer with random values
-void init_layer( Layer * layer, u64 next_size ){
+void init_layer( Layer * layer, u64 next_size, u64 batch_size ){
     u64 size = layer->size;
     for( u64 j = 0; j < next_size; j++ ){
         layer->bias[j]       = ((f64) rand() / (f64)RAND_MAX) - 0.5;
@@ -35,9 +36,9 @@ void init_layer( Layer * layer, u64 next_size ){
             layer->delta_weights[j * size + i] = 0.0f;
         }   
     }
-    for( u64 i = 0; i < size ; i++ ){
-        layer->neurons[i]       = 0;
-        layer->delta_neurons[i] = 0;
+    for( u64 i = 0; i < size * batch_size; i++ ){
+        layer->batch_neurons[i]       = 0;
+        layer->batch_delta_neurons[i] = 0;
 
     }
 }
@@ -46,15 +47,15 @@ void init_layer( Layer * layer, u64 next_size ){
 
 
 //  General free function, liberating all allocated memory to the NN
-void free_neural_network(Neural_network * neural_network, u64 size)
+void free_neural_network(Neural_network * neural_network )
 {
-    for(int i = 0; i<size; i++){
+    for(int i = 0; i < neural_network->size ; i++){
         Layer layer = neural_network->layers[i];
         free(layer.bias);
-        free(layer.neurons);
+        free(layer.batch_neurons);
         free(layer.weights);
 
-        free(layer.delta_neurons);
+        free(layer.batch_delta_neurons);
         free(layer.delta_weights);
         free(layer.delta_bias);
         // free(layer);
@@ -71,6 +72,7 @@ Neural_network * init_neural_network( Context * context ){
     u64 input_size = input_size_from_context(context );
     u64 output_size = 1;
 
+    // topology
     u64 * topology = malloc( (nn_size+1)  * sizeof(u64) );
     topology[0] = input_size;
     for(u64 i = 1; i < nn_size-1; i++){
@@ -88,16 +90,14 @@ Neural_network * init_neural_network( Context * context ){
     neural_network->activation_function = malloc( nn_size * sizeof(activation_function_t*) );
     neural_network->activation_d_function = malloc( nn_size * sizeof(activation_function_t*) );
 
-    printf("\n");
+    // layers
     for(u64 i = 0; i < nn_size; i++){
         create_layer( &neural_network->layers[i], 
-                    topology[i], topology[i+1] );
-        printf(" %llu ", topology[i] );
+                    topology[i], topology[i+1], context->batch_size );
     }
-    printf("\n");
 
     for(u64 i = 0; i < nn_size - 1; i++){
-        init_layer( &neural_network->layers[i], topology[i+1] );
+        init_layer( &neural_network->layers[i], topology[i+1], context->batch_size );
     }
 
     // // creation
@@ -157,7 +157,7 @@ void compute_layer( Layer * layer1, Layer * layer2, activation_function_t * acti
             s += layer1->neurons[i] * layer1->weights[ j * size + i ];
         }
         // layer2->neurons[j] = sigmoid(s);
-        layer2->neurons[j] = s;
+       layer2->neurons[j] = s;
     }
 
     activation( layer2->neurons, layer2->neurons, next_size );
@@ -207,6 +207,7 @@ void compute_delta( Layer * layer1, Layer * layer2, activation_function_t * acti
             s += layer1->weights[j * size + i] * layer2->delta_neurons[j];
         }
         // layer1->delta_neurons[i] = s * d_sigmoid( layer1->neurons[i] ) ;
+ 
         layer1->delta_neurons[i] = s ;
     }
 
@@ -218,16 +219,36 @@ void compute_delta( Layer * layer1, Layer * layer2, activation_function_t * acti
 
 //  Backpropagation process
 //  Changes the weights of all neurons of a layer
-void backpropagate( Layer * layer1, Layer * layer2, f64 eta_, f64 alpha_ ){
+void backpropagate( Layer * layer1, Layer * layer2, f64 eta_, f64 alpha_, u64 batch_size ){
     
     u64 size = layer1->size;
     u64 next_size = layer2->size;
      
     for( u64 j = 0; j < next_size; j++){
-        layer1->delta_bias[j] = (1.f/size) * eta_ * layer2->delta_neurons[j] + alpha_ * layer1->delta_bias[j];
+
+        f64 bias_gradient = 0;
+        for(int k = 0; k < batch_size; k++){
+            bias_gradient += layer2->batch_delta_neurons[ j + k * next_size ];
+        }
+        bias_gradient = bias_gradient / batch_size;
+
+        layer1->delta_bias[j] = (1.f/size) * eta_ * bias_gradient + alpha_ * layer1->delta_bias[j];
+        // layer1->delta_bias[j] = (1.f/size) * eta_ * layer2->delta_neurons[j] + alpha_ * layer1->delta_bias[j];
         layer1->bias[j] -= layer1->delta_bias[j];
+
+
+        //
         for( u64 i = 0; i < size; i++){
-            layer1->delta_weights[j * size + i] = (1.f/size) * eta_ * layer1->neurons[i] * layer2->delta_neurons[j] + 
+
+            f64 weight_gradient = 0;
+            for(int k = 0; k < batch_size; k++){
+                weight_gradient += layer1->batch_neurons[i + k * size] * layer2->batch_delta_neurons[ j + k * next_size ];
+            }
+            weight_gradient = weight_gradient / batch_size;
+
+
+            // layer1->delta_weights[j * size + i] = (1.f/size) * eta_ * layer1->neurons[i] * layer2->delta_neurons[j] + 
+            layer1->delta_weights[j * size + i] = (1.f/size) * eta_ * weight_gradient + 
                                                   alpha_ * layer1->delta_weights[j * size + i];
             layer1->weights[ j * size + i] -= layer1->delta_weights[j * size + i];
         }
@@ -266,9 +287,97 @@ void backward_compute( Neural_network * neural_network, Context * context ){
 
     for(u64 i = 0; i < nn_size - 1; i++){
         backpropagate( &neural_network->layers[i], &neural_network->layers[i+1],
-                      context->eta_, context->alpha_ );
+                      context->eta_, context->alpha_, 1 );
     }
 
+}
+
+////////////////////////////////////////////////////////
+////                  BATCH FUNCTION                ////
+////////////////////////////////////////////////////////
+
+
+
+void batch_forward_propagation( Neural_network * neural_network , Context * context ){
+   
+    u64 nn_size = neural_network->size;
+
+    for(u64 i = 0; i < nn_size - 1; i++){
+        compute_layer( &neural_network->layers[i], &neural_network->layers[i+1],
+                      neural_network->activation_function[i+1] );
+    }
+    
+    compute_output_delta( &neural_network->layers[nn_size - 1] , 
+                         neural_network->expected, 
+                         neural_network->activation_d_function[nn_size - 1] );
+
+    for(u64 i = nn_size - 2; i > 0; i--){
+        compute_delta( &neural_network->layers[i], &neural_network->layers[i+1],
+                         neural_network->activation_d_function[i] );
+    }
+}
+
+
+void batch_backward_propagation( Neural_network * neural_network, Context * context, u64 batch_size ){
+    
+    u64 nn_size = neural_network->size;
+    // printf(" size %llu \n", nn_size);
+    
+    // gather_gradient( neural_network, batch_size );
+
+    for(u64 i = 0; i < nn_size - 1; i++){
+        backpropagate( &neural_network->layers[i], &neural_network->layers[i+1],
+                      context->eta_, context->alpha_, batch_size );
+    }
+
+
+    update_batch_pointer( neural_network, 0);
+
+
+}
+
+
+void gather_gradient( Neural_network * neural_network, u64 batch_size ){
+
+    for(int i = 0; i < neural_network->size ; i++){
+
+        //
+        Layer * layer = &neural_network->layers[i];
+        layer->delta_neurons = layer->batch_delta_neurons + 0;
+        layer->neurons = layer->batch_neurons + 0;
+        
+        //
+        for(int j = 0; j < layer->size; j++){
+            for(int k = 1; k < batch_size; k++){
+                layer->delta_neurons[j] += layer->batch_delta_neurons[ j + k * layer->size ];
+                layer->neurons[j] += layer->batch_neurons[ j + k * layer->size ];
+
+                // if( i == 6 )
+                    // printf("out3 : %d - %d - neurons : %f\n", i, j, layer->batch_neurons[ j + k * layer->size ]);
+            }
+            // if( j < 3 )
+                // printf("%d - %d - neurons : %f\n", i, j, layer->neurons[j]);
+            layer->delta_neurons[j] /= (f64)batch_size;
+            layer->neurons[j] /= (f64)batch_size;
+        }
+    }
+    // getchar();
+
+    return ; 
+}
+
+
+
+//  General free function, liberating all allocated memory to the NN
+void update_batch_pointer(Neural_network * neural_network, u64 offset )
+{
+    for(int i = 0; i < neural_network->size ; i++){
+        Layer * layer = &neural_network->layers[i];
+        // if( i == 6)
+        //     printf("OFFSET : %lld\n", offset * layer->size);
+        layer->delta_neurons = layer->batch_delta_neurons + offset * layer->size;
+        layer->neurons = layer->batch_neurons + offset * layer->size;
+    }
 }
 
 ////////////////////////////////////////////////////////
@@ -384,3 +493,6 @@ void prepare_activation( Neural_network * neural_network, Context * context){
     }
     
 }
+
+
+

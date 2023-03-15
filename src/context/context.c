@@ -79,6 +79,7 @@ int load_context( Context * context, char * filename){
 
 
     //training
+    config_lookup_int(&cfg, "training.batch_size",  &context->batch_size );
     config_lookup_int(&cfg, "training.do_test",  &context->do_test );
     config_lookup_int(&cfg, "training.max_epoch",  &context->max_epoch );
     config_lookup_float(&cfg, "training.precision",  &context->precision );
@@ -159,6 +160,8 @@ int info_context( Context * context ){
 
 
     printf("\n");
+    printf("max per folder : %d \n", context->max_per_folder);
+    printf("batch size : %d \n", context->batch_size);
     printf("do test : %d \n", context->do_test);
     printf("max epoch : %d \n", context->max_epoch);
     printf("precision : %f \n", context->precision);
