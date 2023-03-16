@@ -11,13 +11,15 @@
 //  Allocate a layer
 void create_layer( Layer * layer, u64 size, u64 next_size, u64 batch_size ){
     layer->size = size;
-    layer->batch_neurons       = aligned_alloc(64, size * batch_size * sizeof(f64) );
     layer->weights       = aligned_alloc(64, size * next_size  * sizeof(f64) );
     layer->bias          = aligned_alloc(64, next_size *         sizeof(f64) );
 
-    layer->batch_delta_neurons = aligned_alloc(64, size * batch_size * sizeof(f64) );
     layer->delta_weights = aligned_alloc(64, size * next_size  * sizeof(f64) );
     layer->delta_bias    = aligned_alloc(64, next_size *         sizeof(f64) );
+
+
+    layer->batch_neurons       = aligned_alloc(64, size * batch_size * sizeof(f64) );
+    layer->batch_delta_neurons = aligned_alloc(64, size * batch_size * sizeof(f64) );
 
     layer->neurons = layer->batch_neurons;
     layer->delta_neurons = layer->batch_delta_neurons;
@@ -217,6 +219,33 @@ void compute_delta( Layer * layer1, Layer * layer2, activation_function_t * acti
 }
 
 
+f64 get_weight_gradient( Layer * layer1, Layer * layer2, f64 batch_size, u64 i, u64 j ){
+
+    u64 size = layer1->size;
+    u64 next_size = layer2->size;
+     
+    f64 weight_gradient = 0;
+    for(int k = 0; k < batch_size; k++){
+        weight_gradient += layer1->batch_neurons[i + k * size] * layer2->batch_delta_neurons[ j + k * next_size ];
+    }
+    return weight_gradient = weight_gradient / batch_size;
+
+}
+
+f64 get_bias_gradient( Layer * layer2, f64 batch_size, u64 j ){
+
+    u64 next_size = layer2->size;
+     
+    f64 bias_gradient = 0;
+        for(int k = 0; k < batch_size; k++){
+            bias_gradient += layer2->batch_delta_neurons[ j + k * next_size ];
+        }
+
+    return bias_gradient = bias_gradient / batch_size;
+
+}
+
+
 //  Backpropagation process
 //  Changes the weights of all neurons of a layer
 void backpropagate( Layer * layer1, Layer * layer2, f64 eta_, f64 alpha_, u64 batch_size ){
@@ -226,28 +255,14 @@ void backpropagate( Layer * layer1, Layer * layer2, f64 eta_, f64 alpha_, u64 ba
      
     for( u64 j = 0; j < next_size; j++){
 
-        f64 bias_gradient = 0;
-        for(int k = 0; k < batch_size; k++){
-            bias_gradient += layer2->batch_delta_neurons[ j + k * next_size ];
-        }
-        bias_gradient = bias_gradient / batch_size;
-
+        f64 bias_gradient = get_bias_gradient(layer2, batch_size, j);
         layer1->delta_bias[j] = (1.f/size) * eta_ * bias_gradient + alpha_ * layer1->delta_bias[j];
-        // layer1->delta_bias[j] = (1.f/size) * eta_ * layer2->delta_neurons[j] + alpha_ * layer1->delta_bias[j];
         layer1->bias[j] -= layer1->delta_bias[j];
-
 
         //
         for( u64 i = 0; i < size; i++){
 
-            f64 weight_gradient = 0;
-            for(int k = 0; k < batch_size; k++){
-                weight_gradient += layer1->batch_neurons[i + k * size] * layer2->batch_delta_neurons[ j + k * next_size ];
-            }
-            weight_gradient = weight_gradient / batch_size;
-
-
-            // layer1->delta_weights[j * size + i] = (1.f/size) * eta_ * layer1->neurons[i] * layer2->delta_neurons[j] + 
+            f64 weight_gradient =  get_weight_gradient( layer1, layer2, batch_size, i, j);
             layer1->delta_weights[j * size + i] = (1.f/size) * eta_ * weight_gradient + 
                                                   alpha_ * layer1->delta_weights[j * size + i];
             layer1->weights[ j * size + i] -= layer1->delta_weights[j * size + i];
@@ -275,7 +290,7 @@ void forward_compute( Neural_network * neural_network , Context * context ){
 void backward_compute( Neural_network * neural_network, Context * context ){
     
     u64 nn_size = neural_network->size;
-    // printf(" size %llu \n", nn_size);
+
     compute_output_delta( &neural_network->layers[nn_size - 1] , 
                          neural_network->expected, 
                          neural_network->activation_d_function[nn_size - 1] );
@@ -321,19 +336,17 @@ void batch_forward_propagation( Neural_network * neural_network , Context * cont
 void batch_backward_propagation( Neural_network * neural_network, Context * context, u64 batch_size ){
     
     u64 nn_size = neural_network->size;
-    // printf(" size %llu \n", nn_size);
-    
     // gather_gradient( neural_network, batch_size );
 
+    //
     for(u64 i = 0; i < nn_size - 1; i++){
         backpropagate( &neural_network->layers[i], &neural_network->layers[i+1],
                       context->eta_, context->alpha_, batch_size );
     }
 
-
+    //
     update_batch_pointer( neural_network, 0);
-
-
+    return;
 }
 
 
