@@ -18,13 +18,12 @@ f64 stochastic_gradient_descent( Dataset * dataset, Neural_network * neural_netw
     for( u64 np = 0 ; np < dataset->size ; np++ ) {
         u64 p = scheduler[np];
 
-        fill_input( &neural_network->layers[0], input_size, dataset->images[p].inputs );
-        neural_network->expected[0] = dataset->images[p].value;
+        set_input_output(neural_network, dataset->images[p].inputs, &dataset->images[p].value );
         
-        forward_compute( neural_network, context );
+        stochastic_forward_compute( neural_network, context );
         update_score(  &neural_network->layers[nn_size - 1], neural_network->expected, score );
         if( is_learning){
-            backward_compute( neural_network, context );
+            stochastic_backward_compute( neural_network, context );
         }
     }
 
@@ -48,8 +47,7 @@ f64 one_batch_train( Dataset * dataset, Neural_network * neural_network, Context
         update_batch_pointer( neural_network, j);
 
         // input and expected
-        fill_input( &neural_network->layers[0], input_size, dataset->images[p].inputs );
-        neural_network->expected[0] = dataset->images[p].value;
+        set_input_output(neural_network, dataset->images[p].inputs, &dataset->images[p].value );
 
         //
         batch_forward_propagation(neural_network, context);

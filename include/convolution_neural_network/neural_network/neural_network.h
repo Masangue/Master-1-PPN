@@ -4,28 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 #include "type.h"
 #include "context.h"
 
 #include "activation.h"
 #include "preprocess_image.h"
 
-
-typedef void activation_function_t(f64 * src, f64 * dst, u64 size) ;
-typedef struct {
-    u64   size;
-    f64 * neurons;
-    f64 * weights;
-    f64 * bias;
-    f64 * delta_neurons;
-    f64 * delta_weights;
-    f64 * delta_bias;
-
-
-    f64 * batch_delta_neurons;
-    f64 * batch_neurons;
-} Layer;
+#include "layer.h"
 
 
 typedef struct {
@@ -42,43 +27,26 @@ typedef struct {
 
 //neural network
 Neural_network* init_neural_network( Context * context);
-void    forward_compute( Neural_network * neural_network, Context * context );
-void    backward_compute( Neural_network * neural_network, Context * context );
 void    free_neural_network( Neural_network * neural_network );
+void    set_input_output(Neural_network * neural_network, u8 * input, int * output);
+
+// stochastic functions
+void    stochastic_forward_compute( Neural_network * neural_network, Context * context );
+void    stochastic_backward_compute( Neural_network * neural_network, Context * context );
+
+// batch functions
+void    batch_backward_propagation( Neural_network * neural_network, Context * context, u64 batch_size );
+void    batch_forward_propagation( Neural_network * neural_network , Context * context );
+
+void    update_batch_pointer(Neural_network * neural_network, u64 offset );
+// void gather_gradient( Neural_network * neural_network, u64 batch_size );
 
 
-
-//layer
-void    init_layer( Layer * layer, u64 next_size, u64 batch_size );
-void create_layer( Layer * layer, u64 size, u64 next_size, u64 batch_size );
-
-//forward
-void    fill_input(Layer * layer, u64 size, u8 * tab);
-void    compute_layer( Layer * layer1, Layer * layer2, activation_function_t * activation );
-f64     get_error(Layer * layer, f64 * expected);
-
-//backward
-f64     compute_output_delta( Layer * layer, f64 * expected, activation_function_t * activation );
-void    compute_delta( Layer * layer1, Layer * layer2, activation_function_t * activation );
-void    backpropagate( Layer * layer1, Layer * layer2, f64 eta_, f64 alpha_, u64 batch_size );
-
-
-
-// debug
-void    debug( Layer * layer, u64 next_size );
-
-
+// activation
+void    prepare_activation( Neural_network * neural_network, Context * context);
 
 //misc
 void    shuffle(u64 size, u64 * tab);
 void    range(u64 size, u64 * tab);
-
-void prepare_activation( Neural_network * neural_network, Context * context);
-
-// batch functions 
-void update_batch_pointer(Neural_network * neural_network, u64 offset );
-void batch_backward_propagation( Neural_network * neural_network, Context * context, u64 batch_size );
-void batch_forward_propagation( Neural_network * neural_network , Context * context );
-void gather_gradient( Neural_network * neural_network, u64 batch_size );
 
 
