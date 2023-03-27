@@ -11,7 +11,6 @@ void log_score(FILE * fp, u64 epoch, Score * score){
 f64 stochastic_gradient_descent( Dataset * dataset, Neural_network * neural_network, Context * context, Score * score, u64 * scheduler, FILE * fp, u64 epoch, u64 is_learning ){
  
     u64 nn_size = neural_network->size;
-    u64 input_size = neural_network->layers[0].size;
     // u64 output_size = neural_network->layers[nn_size-1].size;
     
     init_score(score);
@@ -37,8 +36,6 @@ f64 stochastic_gradient_descent( Dataset * dataset, Neural_network * neural_netw
 f64 one_batch_train( Dataset * dataset, Neural_network * neural_network, Context * context,
                  u64 batch_size, u64 * scheduler, Score * score ){
 
-    u64 nn_size = neural_network->size;
-    u64 input_size = neural_network->layers[0].size;   
    
     for( u64 j = 0 ; j < batch_size ; j++ ) {
         u64 p = scheduler[ j ];
@@ -100,13 +97,14 @@ int train(Context * context, Dataset * train_dataset,
     u64 * train_scheduler = malloc( train_dataset->size * sizeof(u64));
     u64 * test_scheduler = malloc( test_dataset->size * sizeof(u64));
     range(test_dataset->size, test_scheduler);
+    range(test_dataset->size, test_scheduler);
 
     preprocess_dataset( train_dataset, context );
     preprocess_dataset( test_dataset, context );
 
 
     float training_score = 0; 
-    for( u64 epoch = 0; epoch < context->max_epoch && training_score + context->precision < 1; epoch++ ){
+    for( u64 epoch = 0; epoch < (u64) context->max_epoch && training_score + context->precision < 1; epoch++ ){
         shuffle(train_dataset->size, train_scheduler);
         
         if (context->batch_size > 1)

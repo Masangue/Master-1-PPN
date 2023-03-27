@@ -82,7 +82,7 @@ void compute_layer( Layer * layer1, Layer * layer2, activation_function_t * acti
 
 //  First step of the backpropagation process
 //  Computes the output error. 
-f64 compute_output_delta( Layer * layer, f64 * expected, activation_function_t * activation ){
+f64 compute_output_delta( Layer * layer, f64 * expected ){
     u64 size = layer->size;
     for( u64 i = 0; i < size; i++ ){
         layer->delta_neurons[i] =  layer->neurons[i] - expected[i]   ;

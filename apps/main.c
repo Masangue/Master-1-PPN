@@ -53,10 +53,9 @@ int main(int argc, char *argv[])
 
     // train
     train( &context, &train_dataset, &test_dataset, neural_network );
-
     store_neural_network( &context, neural_network);
-
-
+                
+    
     // free
     free_neural_network( neural_network  );
     free_dataset( &train_dataset ); 

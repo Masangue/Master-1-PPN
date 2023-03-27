@@ -11,7 +11,7 @@
 //  General free function, liberating all allocated memory to the NN
 void free_neural_network(Neural_network * neural_network )
 {
-    for(int i = 0; i < neural_network->size ; i++){
+    for(u64 i = 0; i < neural_network->size ; i++){
         Layer layer = neural_network->layers[i];
         free(layer.bias);
         free(layer.batch_neurons);
@@ -102,8 +102,7 @@ void stochastic_backward_compute( Neural_network * neural_network, Context * con
     u64 nn_size = neural_network->size;
 
     compute_output_delta( &neural_network->layers[nn_size - 1] , 
-                         neural_network->expected, 
-                         neural_network->activation_d_function[nn_size - 1] );
+                         neural_network->expected );
 
     for(u64 i = nn_size - 2; i > 0; i--){
         compute_delta( &neural_network->layers[i], &neural_network->layers[i+1],
@@ -133,8 +132,7 @@ void batch_forward_propagation( Neural_network * neural_network , Context * cont
     }
     
     compute_output_delta( &neural_network->layers[nn_size - 1] , 
-                         neural_network->expected, 
-                         neural_network->activation_d_function[nn_size - 1] );
+                         neural_network->expected );
 
     for(u64 i = nn_size - 2; i > 0; i--){
         compute_delta( &neural_network->layers[i], &neural_network->layers[i+1],
@@ -194,7 +192,7 @@ void batch_backward_propagation( Neural_network * neural_network, Context * cont
 //  General free function, liberating all allocated memory to the NN
 void update_batch_pointer(Neural_network * neural_network, u64 offset )
 {
-    for(int i = 0; i < neural_network->size ; i++){
+    for(u64 i = 0; i < neural_network->size ; i++){
         Layer * layer = &neural_network->layers[i];
         // if( i == 6)
         //     printf("OFFSET : %lld\n", offset * layer->size);
