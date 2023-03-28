@@ -26,7 +26,7 @@ typedef struct {
 
 
 //neural network
-Neural_network* init_neural_network( Context * context);
+Neural_network* create_neural_network( Context * context);
 void    free_neural_network( Neural_network * neural_network );
 void    set_input_output(Neural_network * neural_network, u8 * input, int * output, u64 batch_iteration);
 

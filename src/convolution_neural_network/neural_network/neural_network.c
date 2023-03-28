@@ -32,7 +32,7 @@ void free_neural_network(Neural_network * neural_network )
 
 
 //  Creates and initializes the NN by calling previously defined functions
-Neural_network * init_neural_network( Context * context ){
+Neural_network * create_neural_network( Context * context ){
     
     u64 nn_size = context->nn_size;
     u64 input_size = input_size_from_context(context );
@@ -66,6 +66,8 @@ Neural_network * init_neural_network( Context * context ){
         init_layer( &neural_network->layers[i], topology[i+1], context->batch_size );
     }
     
+    prepare_activation( neural_network, context );
+
     free(topology);
     return neural_network;
 }

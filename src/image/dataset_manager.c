@@ -2,14 +2,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void init_dataset( Dataset * dataset, Context * context ){
-    
+Dataset create_dataset( Context * context ){
+   
+    Dataset dataset;
+
     int num_folder = 2;
     int max_per_folder = context->max_per_folder;
 
 
-    dataset->size = num_folder * max_per_folder;  
-    dataset->images = malloc( dataset->size * sizeof(mri_image) );
+    dataset.size = num_folder * max_per_folder;  
+    dataset.images = malloc( dataset.size * sizeof(mri_image) );
+
+    return dataset;
 }
 
 
@@ -38,7 +42,7 @@ int count_file_in_directory(char * foldername){
     The function reads the data directory file by file, granting them a value from 0 to 3
     (possible optimization : increase the number of files treated at the same time)
     and sends each file to the prepare_image function for image processing*/
-int load_dataset( char ** dirs, Dataset * dataset, Context * context ){
+int init_dataset( char ** dirs, Dataset * dataset, Context * context ){
 
     int num_folder = 2;
     int max_per_folder = context->max_per_folder;
@@ -90,6 +94,8 @@ int load_dataset( char ** dirs, Dataset * dataset, Context * context ){
     printf("Dataset filled with %d images\n", total_counter );
     return total_counter;
 }
+
+
 
 int free_mri_image( mri_image * image ){
     // free( image->filename );
