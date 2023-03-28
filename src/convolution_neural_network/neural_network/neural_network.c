@@ -1,5 +1,6 @@
 #include "neural_network.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 
 
@@ -23,6 +24,9 @@ void free_neural_network(Neural_network * neural_network )
     }
     free( neural_network->layers );
     free( neural_network->expected );
+    free( neural_network->activation_function );
+    free( neural_network->activation_d_function );
+
     free( neural_network );
 }
 
@@ -61,7 +65,8 @@ Neural_network * init_neural_network( Context * context ){
     for(u64 i = 0; i < nn_size - 1; i++){
         init_layer( &neural_network->layers[i], topology[i+1], context->batch_size );
     }
-
+    
+    free(topology);
     return neural_network;
 }
 

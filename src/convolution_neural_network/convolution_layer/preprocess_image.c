@@ -26,10 +26,14 @@ int preprocess_dataset( Dataset * dataset, Context * context ){
                 dataset->images[i].width, 
                 dataset->images[i].height,
                 convo_funcs, kernels, context->convo_size );
+        free(dataset->images[i].pixels);
+        dataset->images[i].pixels = NULL;
     }
     
     free(image_ptr);
     free(buffer_ptr);
+    free(convo_funcs);
+    free(kernels);
 
 
     return 0;

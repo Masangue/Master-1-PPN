@@ -184,6 +184,21 @@ int info_context( Context * context ){
 
 
 int free_context( Context * context ){
+
+    for( int i = 0; i < context->nn_size; i++ ){
+        free(context->activation_functions[i]);
+    }
+    free(context->activation_functions);
+    
+
+    for(int i = 0; i < context->convo_size; ++i )
+    {
+        free( context->convo[i].func );
+        free( context->convo[i].kernel );
+    }
+    free(context->convo);
+
+
     for( int i = 0; i < 2; i++ ){
         free(context->test_dirs[i]);
     }
@@ -198,7 +213,6 @@ int free_context( Context * context ){
     free(context->train_dat_path);
     free(context->test_dat_path);
     free(context->topology);
-
 
     
     return 0;

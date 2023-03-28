@@ -101,8 +101,8 @@ int train(Context * context, Dataset * train_dataset,
     
     u64 * train_scheduler = malloc( train_dataset->size * sizeof(u64));
     u64 * test_scheduler = malloc( test_dataset->size * sizeof(u64));
-    range(test_dataset->size, test_scheduler);
-    range(test_dataset->size, test_scheduler);
+    range(test_dataset->size,  test_scheduler);
+    range(train_dataset->size, train_scheduler);
 
     preprocess_dataset( train_dataset, context );
     preprocess_dataset( test_dataset, context );
