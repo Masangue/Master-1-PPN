@@ -15,11 +15,10 @@ void create_layer( Layer * layer, u64 size, u64 next_size, u64 batch_size ){
     layer->delta_bias    = aligned_alloc(64, next_size *         sizeof(f64) );
 
 
-    layer->batch_neurons       = aligned_alloc(64, size * batch_size * sizeof(f64) );
-    layer->batch_delta_neurons = aligned_alloc(64, size * batch_size * sizeof(f64) );
 
-    layer->neurons = layer->batch_neurons;
-    layer->delta_neurons = layer->batch_delta_neurons;
+    layer->neurons       = aligned_alloc(64, size * batch_size * sizeof(f64) );
+    layer->delta_neurons = aligned_alloc(64, size * batch_size * sizeof(f64) );
+
 
 }
 
@@ -36,8 +35,8 @@ void init_layer( Layer * layer, u64 next_size, u64 batch_size ){
         }   
     }
     for( u64 i = 0; i < size * batch_size; i++ ){
-        layer->batch_neurons[i]       = 0;
-        layer->batch_delta_neurons[i] = 0;
+        layer->neurons[i]       = 0;
+        layer->delta_neurons[i] = 0;
 
     }
 }
@@ -56,21 +55,23 @@ void init_layer( Layer * layer, u64 next_size, u64 batch_size ){
 
 
 //  Applies standard neural computation function
-void compute_layer( Layer * layer1, Layer * layer2, activation_function_t * activation ){
+void compute_layer( Layer * layer1, Layer * layer2, u64 batch_iteration, activation_function_t * activation ){
     u64 size = layer1->size;
     u64 next_size = layer2->size;
+    u64 offset1 = batch_iteration * size;
+    u64 offset2 = batch_iteration * next_size;
+    
     f64 s = 0.0f;
-
     for( u64 j = 0; j < next_size; j++ ){
         s = layer1->bias[j];
         for( u64 i = 0; i < size ; i++ ){
-            s += layer1->neurons[i] * layer1->weights[ j * size + i ];
+            s += layer1->neurons[offset1 + i] * layer1->weights[ j * size + i ];
         }
         // layer2->neurons[j] = sigmoid(s);
-       layer2->neurons[j] = s;
+       layer2->neurons[offset2 + j] = s;
     }
 
-    activation( layer2->neurons, layer2->neurons, next_size );
+    activation( layer2->neurons+offset2, layer2->neurons+offset2, next_size );
      
 }
 
@@ -82,10 +83,12 @@ void compute_layer( Layer * layer1, Layer * layer2, activation_function_t * acti
 
 //  First step of the backpropagation process
 //  Computes the output error. 
-f64 compute_output_delta( Layer * layer, f64 * expected ){
+f64 compute_output_delta( Layer * layer, f64 * expected, u64 batch_iteration ){
     u64 size = layer->size;
+    u64 offset1 = batch_iteration * size;
+    
     for( u64 i = 0; i < size; i++ ){
-        layer->delta_neurons[i] =  layer->neurons[i] - expected[i]   ;
+        layer->delta_neurons[offset1 + i] =  layer->neurons[offset1 + i] - expected[i]   ;
     }
     return 0;
 }
@@ -93,24 +96,26 @@ f64 compute_output_delta( Layer * layer, f64 * expected ){
 //  Backpropagation process.
 //  Computes the error delta for all neurons of a layer
 //  This function will be called for each layer
-void compute_delta( Layer * layer1, Layer * layer2, activation_function_t * activation ){
+void compute_delta( Layer * layer1, Layer * layer2, u64 batch_iteration, activation_function_t * activation ){
 
     u64 size = layer1->size;
     u64 next_size = layer2->size;
-    f64 s = 0.f;
+    u64 offset1 = batch_iteration * size;
+    u64 offset2 = batch_iteration * next_size;
 
+    f64 s = 0.f;
     for( u64 i = 0; i < size; i++ ){
         s = 0.0;
         for( u64 j = 0; j < next_size; j++ ){
-            s += layer1->weights[j * size + i] * layer2->delta_neurons[j];
+            s += layer1->weights[j * size + i] * layer2->delta_neurons[offset2 + j];
         }
         // layer1->delta_neurons[i] = s * d_sigmoid( layer1->neurons[i] ) ;
  
-        layer1->delta_neurons[i] = s ;
+        layer1->delta_neurons[offset1 + i] = s ;
     }
 
     //delta_neurons = delta_neurons * d_sigmoid( neurons );
-    activation( layer1->neurons,  layer1->delta_neurons, size );
+    activation( layer1->neurons+offset1,  layer1->delta_neurons+offset1, size );
 
 }
 
@@ -151,7 +156,7 @@ f64 get_weight_gradient( Layer * layer1, Layer * layer2, f64 batch_size, u64 i, 
      
     f64 weight_gradient = 0;
     for(int k = 0; k < batch_size; k++){
-        weight_gradient += layer1->batch_neurons[i + k * size] * layer2->batch_delta_neurons[ j + k * next_size ];
+        weight_gradient += layer1->neurons[i + k * size] * layer2->delta_neurons[ j + k * next_size ];
     }
     return weight_gradient = weight_gradient / batch_size;
 
@@ -163,7 +168,7 @@ f64 get_bias_gradient( Layer * layer2, f64 batch_size, u64 j ){
      
     f64 bias_gradient = 0;
         for(int k = 0; k < batch_size; k++){
-            bias_gradient += layer2->batch_delta_neurons[ j + k * next_size ];
+            bias_gradient += layer2->delta_neurons[ j + k * next_size ];
         }
 
     return bias_gradient = bias_gradient / batch_size;

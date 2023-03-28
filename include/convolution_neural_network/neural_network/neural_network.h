@@ -28,15 +28,15 @@ typedef struct {
 //neural network
 Neural_network* init_neural_network( Context * context);
 void    free_neural_network( Neural_network * neural_network );
-void    set_input_output(Neural_network * neural_network, u8 * input, int * output);
+void    set_input_output(Neural_network * neural_network, u8 * input, int * output, u64 batch_iteration);
 
 // stochastic functions
 void    stochastic_forward_compute( Neural_network * neural_network, Context * context );
 void    stochastic_backward_compute( Neural_network * neural_network, Context * context );
 
 // batch functions
-void    batch_backward_propagation( Neural_network * neural_network, Context * context, u64 batch_size );
-void    batch_forward_propagation( Neural_network * neural_network , Context * context );
+void    batch_forward_propagation( Neural_network * neural_network , Context * context, u64 batch_iteration);
+void    batch_backward_propagation( Neural_network * neural_network, Context * context, u64 batch_size);
 
 void    update_batch_pointer(Neural_network * neural_network, u64 offset );
 // void gather_gradient( Neural_network * neural_network, u64 batch_size );

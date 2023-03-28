@@ -17,10 +17,12 @@ f64 stochastic_gradient_descent( Dataset * dataset, Neural_network * neural_netw
     for( u64 np = 0 ; np < dataset->size ; np++ ) {
         u64 p = scheduler[np];
 
-        set_input_output(neural_network, dataset->images[p].inputs, &dataset->images[p].value );
+        set_input_output(neural_network, dataset->images[p].inputs, &dataset->images[p].value, 0 );
         
         stochastic_forward_compute( neural_network, context );
-        update_score(  &neural_network->layers[nn_size - 1], neural_network->expected, score );
+        update_score(  &neural_network->layers[nn_size - 1], 
+                     neural_network->expected, score, 0 );
+
         if( is_learning){
             stochastic_backward_compute( neural_network, context );
         }
@@ -39,16 +41,19 @@ f64 one_batch_train( Dataset * dataset, Neural_network * neural_network, Context
    
     for( u64 j = 0 ; j < batch_size ; j++ ) {
         u64 p = scheduler[ j ];
+        u64 bi = j;
 
         //
-        update_batch_pointer( neural_network, j);
+        // update_batch_pointer( neural_network, bi);
 
         // input and expected
-        set_input_output(neural_network, dataset->images[p].inputs, &dataset->images[p].value );
+        set_input_output(neural_network, dataset->images[p].inputs,
+                         &dataset->images[p].value, bi );
 
         //
-        batch_forward_propagation(neural_network, context);
-        update_score( &neural_network->layers[neural_network->size - 1], neural_network->expected, score );
+        batch_forward_propagation(neural_network, context, bi);
+        update_score( &neural_network->layers[neural_network->size - 1], 
+                     neural_network->expected, score, bi );
     }
     
     batch_backward_propagation( neural_network, context, batch_size );

@@ -14,13 +14,12 @@ void free_neural_network(Neural_network * neural_network )
     for(u64 i = 0; i < neural_network->size ; i++){
         Layer layer = neural_network->layers[i];
         free(layer.bias);
-        free(layer.batch_neurons);
+        free(layer.neurons);
         free(layer.weights);
 
-        free(layer.batch_delta_neurons);
+        free(layer.delta_neurons);
         free(layer.delta_weights);
         free(layer.delta_bias);
-        // free(layer);
     }
     free( neural_network->layers );
     free( neural_network->expected );
@@ -67,10 +66,14 @@ Neural_network * init_neural_network( Context * context ){
 }
 
 //  Fills the input layers with the list of chars representing the image
-void set_input_output(Neural_network * neural_network, u8 * input, int * output){
+void set_input_output(Neural_network * neural_network, u8 * input, int * output, u64 batch_iteration){
+
     Layer * layer_input = &neural_network->layers[0];
+    u64 size = layer_input->size;
+    u64 offset1 = batch_iteration * size;
+
     for( u64 i = 0; i < layer_input->size; i++ ){
-        layer_input->neurons[i] = (f64) input[i] / 255;
+        layer_input->neurons[offset1 + i] = (f64) input[i] / 255;
     }
 
     Layer * layer_output = &neural_network->layers[neural_network->size - 1];
@@ -90,7 +93,7 @@ void set_input_output(Neural_network * neural_network, u8 * input, int * output)
 //  Wrapper function, computing each layer forward
 void stochastic_forward_compute( Neural_network * neural_network , Context * context ){
     for(u64 i = 0; i < neural_network->size - 1; i++){
-        compute_layer( &neural_network->layers[i], &neural_network->layers[i+1],
+        compute_layer( &neural_network->layers[i], &neural_network->layers[i+1], 0,
                       neural_network->activation_function[i+1] );
     }
 }
@@ -102,10 +105,10 @@ void stochastic_backward_compute( Neural_network * neural_network, Context * con
     u64 nn_size = neural_network->size;
 
     compute_output_delta( &neural_network->layers[nn_size - 1] , 
-                         neural_network->expected );
+                         neural_network->expected, 0);
 
     for(u64 i = nn_size - 2; i > 0; i--){
-        compute_delta( &neural_network->layers[i], &neural_network->layers[i+1],
+        compute_delta( &neural_network->layers[i], &neural_network->layers[i+1], 0,
                          neural_network->activation_d_function[i] );
     }
 
@@ -122,20 +125,20 @@ void stochastic_backward_compute( Neural_network * neural_network, Context * con
 
 
 
-void batch_forward_propagation( Neural_network * neural_network , Context * context ){
+void batch_forward_propagation( Neural_network * neural_network, Context * context, u64 batch_iteration ){
    
     u64 nn_size = neural_network->size;
 
     for(u64 i = 0; i < nn_size - 1; i++){
-        compute_layer( &neural_network->layers[i], &neural_network->layers[i+1],
+        compute_layer( &neural_network->layers[i], &neural_network->layers[i+1], batch_iteration,
                       neural_network->activation_function[i+1] );
     }
     
-    compute_output_delta( &neural_network->layers[nn_size - 1] , 
-                         neural_network->expected );
+    compute_output_delta( &neural_network->layers[nn_size - 1], 
+                         neural_network->expected, batch_iteration );
 
     for(u64 i = nn_size - 2; i > 0; i--){
-        compute_delta( &neural_network->layers[i], &neural_network->layers[i+1],
+        compute_delta( &neural_network->layers[i], &neural_network->layers[i+1], batch_iteration,
                          neural_network->activation_d_function[i] );
     }
 }
@@ -144,7 +147,6 @@ void batch_forward_propagation( Neural_network * neural_network , Context * cont
 void batch_backward_propagation( Neural_network * neural_network, Context * context, u64 batch_size ){
     
     u64 nn_size = neural_network->size;
-    // gather_gradient( neural_network, batch_size );
 
     //
     for(u64 i = 0; i < nn_size - 1; i++){
@@ -152,53 +154,7 @@ void batch_backward_propagation( Neural_network * neural_network, Context * cont
                       context->eta_, context->alpha_, batch_size );
     }
 
-    //
-    update_batch_pointer( neural_network, 0);
     return;
-}
-
-
-// void gather_gradient( Neural_network * neural_network, u64 batch_size ){
-//
-//     for(int i = 0; i < neural_network->size ; i++){
-//
-//         //
-//         Layer * layer = &neural_network->layers[i];
-//         layer->delta_neurons = layer->batch_delta_neurons + 0;
-//         layer->neurons = layer->batch_neurons + 0;
-//         
-//         //
-//         for(int j = 0; j < layer->size; j++){
-//             for(int k = 1; k < batch_size; k++){
-//                 layer->delta_neurons[j] += layer->batch_delta_neurons[ j + k * layer->size ];
-//                 layer->neurons[j] += layer->batch_neurons[ j + k * layer->size ];
-//
-//                 // if( i == 6 )
-//                     // printf("out3 : %d - %d - neurons : %f\n", i, j, layer->batch_neurons[ j + k * layer->size ]);
-//             }
-//             // if( j < 3 )
-//                 // printf("%d - %d - neurons : %f\n", i, j, layer->neurons[j]);
-//             layer->delta_neurons[j] /= (f64)batch_size;
-//             layer->neurons[j] /= (f64)batch_size;
-//         }
-//     }
-//     // getchar();
-//
-//     return ; 
-// }
-
-
-
-//  General free function, liberating all allocated memory to the NN
-void update_batch_pointer(Neural_network * neural_network, u64 offset )
-{
-    for(u64 i = 0; i < neural_network->size ; i++){
-        Layer * layer = &neural_network->layers[i];
-        // if( i == 6)
-        //     printf("OFFSET : %lld\n", offset * layer->size);
-        layer->delta_neurons = layer->batch_delta_neurons + offset * layer->size;
-        layer->neurons = layer->batch_neurons + offset * layer->size;
-    }
 }
 
 
