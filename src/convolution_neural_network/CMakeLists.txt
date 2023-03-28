@@ -10,6 +10,7 @@ add_library(convolution_neural_network STATIC
         training.c ${CURRENT_INCLUDE_DIR}/training.h
  
         neural_network/neural_network.c ${NN_INCLUDE_DIR}/neural_network.h
+        neural_network/layer.c ${NN_INCLUDE_DIR}/layer.h
         neural_network/activation.c ${NN_INCLUDE_DIR}/activation.h
 
         convolution_layer/convolution_layer.c ${CL_INCLUDE_DIR}/convolution_layer.h

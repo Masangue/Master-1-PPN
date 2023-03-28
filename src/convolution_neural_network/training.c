@@ -1,35 +1,88 @@
 #include "training.h"
+#include "neural_network.h"
+#include <stdio.h>
 
 
-f64 train_one_epoch( Dataset * dataset, Neural_network * neural_network, Context * context, Score * score,u64 * scheduler, FILE * fp, u64 epoch, u64 is_learning ){
+void log_score(FILE * fp, u64 epoch, Score * score){
+    fprintf(fp, "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score->precision, score->recall, score->accuracy, score->f1,  score->specificity );
+    printf( "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score->precision, score->recall, score->accuracy, score->f1,  score->specificity );
+}
+
+f64 stochastic_gradient_descent( Dataset * dataset, Neural_network * neural_network, Context * context, Score * score, u64 * scheduler, FILE * fp, u64 epoch, u64 is_learning ){
  
     u64 nn_size = neural_network->size;
-    u64 input_size = neural_network->layers[0].size;
     // u64 output_size = neural_network->layers[nn_size-1].size;
-
     
     init_score(score);
     for( u64 np = 0 ; np < dataset->size ; np++ ) {
-       u64 p = scheduler[np];
-       // display_ascii_image( train_dataset->images[p].inputs, train_dataset->images[p].width, train_dataset->images[p].height );
+        u64 p = scheduler[np];
 
-       fill_input( &neural_network->layers[0], input_size, dataset->images[p].inputs );
-       neural_network->expected[0] = dataset->images[p].value;
-       forward_compute( neural_network, context );
-       update_score(  &neural_network->layers[nn_size - 1], neural_network->expected, score );
-       if( is_learning){
-           backward_compute( neural_network, context );
+        set_input_output(neural_network, dataset->images[p].inputs, &dataset->images[p].value, 0 );
+        
+        stochastic_forward_compute( neural_network, context );
+        update_score(  &neural_network->layers[nn_size - 1], 
+                     neural_network->expected, score, 0 );
+
+        if( is_learning){
+            stochastic_backward_compute( neural_network, context );
         }
-
     }
 
     process_score( score );
+    log_score(fp, epoch, score);
+    return score->f1;
+}
 
 
-    fprintf(fp, "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score->precision, score->recall, score->accuracy, score->f1,  score->specificity );
-    printf( "%llu; %lf; %lf; %lf; %lf; %lf\n", epoch, score->precision, score->recall, score->accuracy, score->f1,  score->specificity );
+
+f64 one_batch_train( Dataset * dataset, Neural_network * neural_network, Context * context,
+                 u64 batch_size, u64 * scheduler, Score * score ){
+
+   
+    for( u64 j = 0 ; j < batch_size ; j++ ) {
+        u64 p = scheduler[ j ];
+        u64 bi = j;
+
+        //
+        // update_batch_pointer( neural_network, bi);
+
+        // input and expected
+        set_input_output(neural_network, dataset->images[p].inputs,
+                         &dataset->images[p].value, bi );
+
+        //
+        batch_forward_propagation(neural_network, context, bi);
+        update_score( &neural_network->layers[neural_network->size - 1], 
+                     neural_network->expected, score, bi );
+    }
     
+    batch_backward_propagation( neural_network, context, batch_size );
 
+    return 0;
+}
+
+
+
+f64 batch_gradient_descent( Dataset * dataset, Neural_network * neural_network, Context * context, 
+                           Score * score, u64 * scheduler, FILE * fp, u64 epoch ){
+
+    u64 batch_size = context->batch_size;
+    u64 dataset_size = dataset->size;
+
+    init_score(score);
+   
+    u64 number_of_complete_batch = dataset_size / batch_size;
+    for( u64 i = 0 ; i < number_of_complete_batch ; i++ ) {
+        one_batch_train(dataset, neural_network, context, batch_size, 
+                        scheduler + batch_size * i, score);
+    }
+
+    if( dataset_size % batch_size > 0)
+        one_batch_train(dataset, neural_network, context, dataset_size % batch_size,
+                        scheduler + number_of_complete_batch * batch_size, score);
+
+    process_score( score );
+    log_score(fp, epoch, score);
     return score->f1;
 }
 
@@ -48,23 +101,23 @@ int train(Context * context, Dataset * train_dataset,
     
     u64 * train_scheduler = malloc( train_dataset->size * sizeof(u64));
     u64 * test_scheduler = malloc( test_dataset->size * sizeof(u64));
-    range(test_dataset->size, test_scheduler);
-
-
-    // printf(" epoch; precision; recall; accuracy; f1; falsePositiveRate \n");
-    // fprintf(fp_test," epoch; precision; recall; accuracy; f1; falsePositiveRate \n");
-    // fprintf(fp_train," epoch; precision; recall; accuracy; f1; falsePositiveRate \n");
+    range(test_dataset->size,  test_scheduler);
+    range(train_dataset->size, train_scheduler);
 
     preprocess_dataset( train_dataset, context );
     preprocess_dataset( test_dataset, context );
 
 
     float training_score = 0; 
-    for( u64 epoch = 0; epoch < context->max_epoch && training_score + context->precision < 1; epoch++ ){
+    for( u64 epoch = 0; epoch < (u64) context->max_epoch && training_score + context->precision < 1; epoch++ ){
         shuffle(train_dataset->size, train_scheduler);
-         
-        training_score = train_one_epoch( train_dataset, neural_network, context, &score, train_scheduler, fp_train, epoch, 1 );
-        train_one_epoch( test_dataset,  neural_network, context, &score, test_scheduler,  fp_test,  epoch, 0 );
+        
+        if (context->batch_size > 1)
+            training_score = batch_gradient_descent( train_dataset, neural_network, context, &score, train_scheduler, fp_train, epoch );
+        else
+            training_score = stochastic_gradient_descent( train_dataset, neural_network, context, &score, train_scheduler, fp_train, epoch, 1 );
+
+        stochastic_gradient_descent( test_dataset,  neural_network, context, &score, test_scheduler,  fp_test,  epoch, 0 );
         
         }
 

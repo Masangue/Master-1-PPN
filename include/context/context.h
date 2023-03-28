@@ -36,6 +36,7 @@ typedef struct {
     char ** activation_functions;
 
     // training
+    int batch_size;
     int do_test;
     int max_epoch;
     double precision;

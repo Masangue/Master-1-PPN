@@ -25,5 +25,5 @@ typedef struct {
 
 
 void init_score( Score * score );
-void update_score( Layer * output_layer, f64 * expected, Score * score );
+void update_score( Layer * output_layer, f64 * expected, Score * score, u64 batch_iteration );
 void process_score( Score * score );

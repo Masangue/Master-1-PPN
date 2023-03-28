@@ -79,6 +79,7 @@ int load_context( Context * context, char * filename){
 
 
     //training
+    config_lookup_int(&cfg, "training.batch_size",  &context->batch_size );
     config_lookup_int(&cfg, "training.do_test",  &context->do_test );
     config_lookup_int(&cfg, "training.max_epoch",  &context->max_epoch );
     config_lookup_float(&cfg, "training.precision",  &context->precision );
@@ -159,6 +160,8 @@ int info_context( Context * context ){
 
 
     printf("\n");
+    printf("max per folder : %d \n", context->max_per_folder);
+    printf("batch size : %d \n", context->batch_size);
     printf("do test : %d \n", context->do_test);
     printf("max epoch : %d \n", context->max_epoch);
     printf("precision : %f \n", context->precision);
@@ -181,6 +184,21 @@ int info_context( Context * context ){
 
 
 int free_context( Context * context ){
+
+    for( int i = 0; i < context->nn_size; i++ ){
+        free(context->activation_functions[i]);
+    }
+    free(context->activation_functions);
+    
+
+    for(int i = 0; i < context->convo_size; ++i )
+    {
+        free( context->convo[i].func );
+        free( context->convo[i].kernel );
+    }
+    free(context->convo);
+
+
     for( int i = 0; i < 2; i++ ){
         free(context->test_dirs[i]);
     }
@@ -195,7 +213,6 @@ int free_context( Context * context ){
     free(context->train_dat_path);
     free(context->test_dat_path);
     free(context->topology);
-
 
     
     return 0;

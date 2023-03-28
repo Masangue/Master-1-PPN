@@ -94,7 +94,9 @@ int load_dataset( char ** dirs, Dataset * dataset, Context * context ){
 int free_mri_image( mri_image * image ){
     // free( image->filename );
     free( image->inputs );
-    free( image->pixels );
+    if ( image->pixels != NULL ) {
+        free( image->pixels );
+    }
 
     return 0;
 }

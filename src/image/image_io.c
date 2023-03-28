@@ -4,7 +4,7 @@
 int store_image_ppm(char * filename, unsigned char * tab , size_t dimx, size_t dimy)
 {
     // const int dimx = 800, dimy = 800;
-    int i, j;
+    size_t i, j;
     FILE *fp = fopen(filename, "wb"); /* b - binary mode */
     (void) fprintf(fp, "P6\n%d %d\n255\n", (int)dimx, (int)dimy);
     for (j = 0; j < dimy; ++j) {

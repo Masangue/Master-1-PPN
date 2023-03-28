@@ -16,11 +16,13 @@ void init_score( Score * score ){
 
 }
 
-void update_score( Layer * output_layer, f64 * expected, Score * score ) {
+void update_score( Layer * output_layer, f64 * expected, Score * score, u64 batch_iteration ) {
     u64 size = output_layer->size;
+    u64 offset1 = batch_iteration * size;
+    
     f64 err = 0;
     for( u64 i = 0; i < size; i++ ){
-            err += sqrt(pow(expected[i] - output_layer->neurons[i],2));
+            err += sqrt(pow(expected[i] - output_layer->neurons[offset1 + i],2));
     }
 
     err = err / size;
