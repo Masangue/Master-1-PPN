@@ -13,7 +13,7 @@ set_target_properties(context PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINAR
 
 target_include_directories(context PUBLIC "${CURRENT_INCLUDE_DIR}" "${INCLUDE_DIR}" )
 
-target_link_libraries(context PUBLIC config )
+target_link_libraries(context PUBLIC config mpi )
 
 
 

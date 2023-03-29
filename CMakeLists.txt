@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(projet  DESCRIPTION "CNN" LANGUAGES C)
 
+
+# set(CMAKE_C_COMPILER "mpicc")
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 

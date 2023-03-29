@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <mpi.h>
 
 #include <libconfig.h>
 
@@ -10,7 +11,6 @@
 #include "global.h"
 
 
-#define STRING_SIZE 50
 typedef struct {
     char * func;
     int size;
@@ -54,4 +54,8 @@ typedef struct {
 int load_context( Context * context, char * filename);
 int info_context( Context * context );
 int free_context( Context * context );
+
+int mpi_share_context( Context * context );
+int mpi_rcv_context  ( Context * context );
+int mpi_send_context ( Context * context );
 

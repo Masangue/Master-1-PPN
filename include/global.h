@@ -7,6 +7,10 @@
 #define IMAGE_HEIGHT 208
 #define IMAGE_SIZE   36608
 
+#define ROOT 0
+#define MASTER_RANK 0
+#define STRING_SIZE 50
+
 
 // kernel filters 
 static const u8 blur_5x5 [25] = {

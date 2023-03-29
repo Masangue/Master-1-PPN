@@ -1,6 +1,5 @@
 #include "context.h"
 #include <stdio.h>
-#include <stdlib.h>
 
 //https://github.com/hyperrealm/libconfig/blob/master/examples/c/example1.c
 
@@ -218,3 +217,159 @@ int free_context( Context * context ){
     return 0;
 
 }
+
+
+
+int mpi_send_context( Context * context ){
+    
+    int rank, P;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &P);
+   
+    // MPI_Status sta;
+
+    for (int i = 0; i < P; i++) {
+        if ( i == MASTER_RANK ) 
+            continue;
+
+
+
+        MPI_Ssend( context->context_path, STRING_SIZE, MPI_CHAR, i, 1000, MPI_COMM_WORLD );
+        
+       
+        // output
+        MPI_Ssend( context->storage_dir, STRING_SIZE, MPI_CHAR, i, 1000, MPI_COMM_WORLD );
+        MPI_Ssend( context->train_dat_path, STRING_SIZE, MPI_CHAR, i, 1000, MPI_COMM_WORLD );
+        MPI_Ssend( context->test_dat_path, STRING_SIZE, MPI_CHAR, i, 1000, MPI_COMM_WORLD );
+
+        //dataset
+        MPI_Ssend(&context->max_per_folder, 1, MPI_INT, i, 1000, MPI_COMM_WORLD );
+        for (int j = 0; j < 2; j++){
+            MPI_Ssend( context->train_dirs[j], STRING_SIZE, MPI_CHAR, i, 1000, MPI_COMM_WORLD );
+            MPI_Ssend( context->test_dirs[j], STRING_SIZE, MPI_CHAR, i, 1000, MPI_COMM_WORLD );
+        }
+ 
+        //nn
+        MPI_Ssend(&context->nn_size,  1, MPI_INT, i, 1000, MPI_COMM_WORLD );
+        MPI_Ssend( context->topology, context->nn_size - 2, MPI_INT, i, 1000, MPI_COMM_WORLD );
+
+        for (int j = 0; j < context->nn_size; j++){
+            MPI_Ssend( context->activation_functions[j], STRING_SIZE, MPI_CHAR, i, 1000, MPI_COMM_WORLD );
+        }
+
+
+        // training
+        MPI_Ssend(&context->batch_size, 1, MPI_INT, i, 1000, MPI_COMM_WORLD );
+        MPI_Ssend(&context->do_test, 1, MPI_INT, i, 1000, MPI_COMM_WORLD );
+        MPI_Ssend(&context->max_epoch, 1, MPI_INT, i, 1000, MPI_COMM_WORLD );
+        MPI_Ssend(&context->precision, 1, MPI_DOUBLE, i, 1000, MPI_COMM_WORLD );
+        MPI_Ssend(&context->alpha_, 1, MPI_DOUBLE, i, 1000, MPI_COMM_WORLD );
+        MPI_Ssend(&context->eta_, 1, MPI_DOUBLE, i, 1000, MPI_COMM_WORLD );
+
+        // convolution
+        MPI_Ssend(&context->width, 1, MPI_INT, i, 1000, MPI_COMM_WORLD );
+        MPI_Ssend(&context->height, 1, MPI_INT, i, 1000, MPI_COMM_WORLD );
+        MPI_Ssend(&context->convo_size, 1, MPI_INT, i, 1000, MPI_COMM_WORLD );
+        for(int j = 0; j < context->convo_size; ++j ){
+            MPI_Ssend(&context->convo[j].size,  1, MPI_INT, i, 1000, MPI_COMM_WORLD );
+            MPI_Ssend(context->convo[j].func,   STRING_SIZE, MPI_CHAR, i, 1000, MPI_COMM_WORLD );
+            MPI_Ssend(context->convo[j].kernel, STRING_SIZE, MPI_CHAR, i, 1000, MPI_COMM_WORLD );
+        }
+
+    }
+
+    return 0;
+}
+
+int mpi_rcv_context  ( Context * context ){
+
+    
+    int rank, P;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &P);
+    
+    printf("P%d receiving from P%d\n", rank, MASTER_RANK);
+
+    MPI_Status sta;
+
+    context->context_path = malloc( STRING_SIZE * sizeof(char) );
+    MPI_Recv( context->context_path, STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta );
+       
+    // output
+    context->storage_dir = malloc( STRING_SIZE * sizeof(char) );
+    context->train_dat_path = malloc( STRING_SIZE * sizeof(char) );
+    context->test_dat_path = malloc( STRING_SIZE * sizeof(char) );
+    MPI_Recv( context->storage_dir, STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    MPI_Recv( context->train_dat_path, STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    MPI_Recv( context->test_dat_path, STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+
+    //dataset
+    MPI_Recv(&context->max_per_folder, 1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    context->train_dirs = malloc( 2 * sizeof(char*) );
+    context->test_dirs = malloc( 2 * sizeof(char*) );
+    for (int j = 0; j < 2; j++){
+        context->train_dirs[j] = malloc( STRING_SIZE * sizeof(char) );
+        context->test_dirs[j] = malloc( STRING_SIZE * sizeof(char) );
+        MPI_Recv( context->train_dirs[j], STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+        MPI_Recv( context->test_dirs[j], STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    }
+    
+    //nn
+    MPI_Recv(&context->nn_size,  1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    context->topology = malloc( context->nn_size * sizeof(int) );
+    MPI_Recv( context->topology, context->nn_size - 2, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+
+    context->activation_functions = malloc( context->nn_size * sizeof(char*) );
+    for (int j = 0; j < context->nn_size; j++){
+        context->activation_functions[j] = malloc( STRING_SIZE * sizeof(char) );
+        MPI_Recv( context->activation_functions[j], STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    }
+
+
+    // training
+    MPI_Recv(&context->batch_size, 1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    MPI_Recv(&context->do_test, 1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    MPI_Recv(&context->max_epoch, 1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    MPI_Recv(&context->precision, 1, MPI_DOUBLE, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    MPI_Recv(&context->alpha_, 1, MPI_DOUBLE, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    MPI_Recv(&context->eta_, 1, MPI_DOUBLE, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+
+    // convolution
+    MPI_Recv(&context->width, 1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    MPI_Recv(&context->height, 1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    MPI_Recv(&context->convo_size, 1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    
+    context->convo = malloc(context->convo_size * sizeof(convolution_descriptor) );
+    for(int j = 0; j < context->convo_size; ++j ){
+        context->convo[j].func = malloc( STRING_SIZE * sizeof(char) );
+        context->convo[j].kernel = malloc( STRING_SIZE * sizeof(char) );
+        MPI_Recv(&context->convo[j].size,  1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+        MPI_Recv(context->convo[j].func,   STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+        MPI_Recv(context->convo[j].kernel, STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    }
+
+
+
+    return 0;
+}
+
+int mpi_share_context( Context * context ){
+    
+    int rank, P;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &P);
+
+    if ( P == 1 ) {
+        return 0;
+    }
+
+    if ( rank == MASTER_RANK )
+        mpi_send_context( context );
+        // printf("do nothing\n");
+    else
+        mpi_rcv_context( context );
+
+    return 0; 
+}
+
+
