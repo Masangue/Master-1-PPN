@@ -301,7 +301,7 @@ int mpi_send_context( Context * context ){
     return 0;
 }
 
-int mpi_rcv_context  ( Context * context ){
+int mpi_recv_context  ( Context * context ){
 
     
     int rank, P;
@@ -373,7 +373,7 @@ int mpi_share_context( Context * context ){
         mpi_send_context( context );
         // printf("do nothing\n");
     else
-        mpi_rcv_context( context );
+        mpi_recv_context( context );
 
     return 0; 
 }

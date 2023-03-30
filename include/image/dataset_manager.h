@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <mpi.h>
 
 
 
@@ -46,3 +47,6 @@ int preprocess_dataset( Dataset * dataset, Context * context );
 
 int free_dataset( Dataset * dataset );
 
+int mpi_share_dataset( Dataset * dataset );
+int mpi_send_dataset( Dataset * dataset );
+int mpi_recv_dataset( Dataset * dataset );

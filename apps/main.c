@@ -53,21 +53,20 @@ int main(int argc, char *argv[])
 
     mpi_share_context( &context );
 
-    
+   
     if( rank != ROOT ){
         info_context( &context );
     }
 
 
-    //
-    // // init and fill dataset
-    // train_dataset = create_dataset( &context );
-    // test_dataset  = create_dataset( &context );
-    // if( rank == ROOT ){
-    //     init_dataset( context.train_dirs, &train_dataset, &context);
-    //     init_dataset( context.test_dirs, &test_dataset, &context);
-    // }
-    // //share_dataset
+    // init and fill dataset
+    train_dataset = create_dataset( &context );
+    test_dataset  = create_dataset( &context );
+    if( rank == ROOT ){
+        init_dataset( context.train_dirs, &train_dataset, &context);
+        init_dataset( context.test_dirs, &test_dataset, &context);
+    }
+    mpi_share_dataset( &train_dataset );
     // 
     // //  Initialise The NN
     // neural_network = create_neural_network(&context );

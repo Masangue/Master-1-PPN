@@ -57,7 +57,7 @@ int info_context( Context * context );
 int free_context( Context * context );
 
 int mpi_share_context( Context * context );
-int mpi_rcv_context  ( Context * context );
+int mpi_recv_context  ( Context * context );
 int mpi_send_context ( Context * context );
 
 #define MAX_NN_SIZE 20
