@@ -4,6 +4,7 @@ set(CT_INCLUDE_DIR ${INCLUDE_DIR}/context)
 add_library(image STATIC
 
         dataset_manager.c ${CURRENT_INCLUDE_DIR}/dataset_manager.h
+        directory_manager.c ${CURRENT_INCLUDE_DIR}/directory_manager.h
         image_io.c ${CURRENT_INCLUDE_DIR}/image_io.h
 
         ${INCLUDE_DIR}/type.h

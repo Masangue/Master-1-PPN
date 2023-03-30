@@ -1,4 +1,5 @@
 #include "dataset_manager.h"
+#include <stdlib.h>
 
 int mpi_send_dataset( Dataset * dataset ){
 
@@ -106,26 +107,7 @@ Dataset create_dataset( Context * context ){
 }
 
 
-/*  File counter used in function main */
-int count_file_in_directory(char * foldername){
-    int counter = 0;
-    
-    DIR *d;
-    struct dirent *dir;
-    d = opendir(foldername);
-    if (d) {
-        while ((dir = readdir(d)) != NULL ) {
-            if( strcmp( dir->d_name, ".") == 0 || strcmp( dir->d_name, "..") == 0 ) {
-                continue;
-            }
-            counter++;
-        }
-        closedir(d);
-    }
 
-    return counter;
- 
-}
 
 /*  Dataset loader. 
     The function reads the data directory file by file, granting them a value from 0 to 3
@@ -134,61 +116,46 @@ int count_file_in_directory(char * foldername){
 int init_dataset( char ** dirs, Dataset * dataset, Context * context ){
 
     int num_folder = 2;
-    int max_per_folder = context->max_per_folder;
-
-
-    int folder_counter = 0;
-    int total_counter = 0;
+    int max_file_per_folder = context->max_per_folder;
+    dataset->size = 0;
 
     for( int i = 0; i < num_folder; i++ ){
-        DIR *d;
-        struct dirent *dir;
-        d = opendir(dirs[i]);
-        if (d) {
-            while ((dir = readdir(d)) != NULL && !(folder_counter >= max_per_folder) ) {
-                
-                if( strcmp( dir->d_name, ".") == 0 || strcmp( dir->d_name, "..") == 0 ) {
-                    continue;
-                }
 
-                char image_path[512];
-                snprintf(image_path, sizeof( image_path ), "%s/%s", dirs[i], dir->d_name);
+        char ** files_name = NULL;
+        char * folder_name = dirs[i];
 
-                
-                dataset->images[total_counter].pixels = malloc( IMAGE_SIZE * sizeof(unsigned char));
-                load_image( image_path, &dataset->images[total_counter].pixels, 
-                            &dataset->images[total_counter].original_width, 
-                            &dataset->images[total_counter].original_height);
-                dataset->images[total_counter].value = i;
-                dataset->images[total_counter].filename = "name";
-                dataset->images[total_counter].width  = dataset->images[total_counter].original_width;
-                dataset->images[total_counter].height = dataset->images[total_counter].original_height;
-                // printf("\n%lu x %lu \n",dataset->images[total_counter].width, dataset->images[total_counter].height );
+        int nb_files_in_current_directory = get_filemame_from_dir( folder_name  , &files_name, max_file_per_folder );
 
+        for (int j = 0; j < nb_files_in_current_directory ; j++) {
+            int image_number = dataset->size;
+            dataset->images[image_number].pixels = malloc( IMAGE_SIZE * sizeof(unsigned char));
+            dataset->images[image_number].inputs = NULL;
 
-                total_counter++;
-                folder_counter++; 
-            }
-            folder_counter = 0; 
-            closedir(d);
+            char image_path[512];
+            snprintf(image_path, sizeof( image_path ), "%s/%s", folder_name, files_name[j]);
+ 
+            load_image( image_path, &dataset->images[image_number].pixels, 
+                        &dataset->images[image_number].original_width, 
+                        &dataset->images[image_number].original_height);
+            dataset->images[image_number].value = i;
+            dataset->images[image_number].filename = files_name[j];
+            dataset->images[image_number].width  = dataset->images[image_number].original_width;
+            dataset->images[image_number].height = dataset->images[image_number].original_height;
+            dataset->size ++; 
         }
-        else{
-            printf("%s does not exist", dirs[i]);
-            exit(0);
-        }
+        free(files_name);
     }
-    //update dataset size to its true value
-    dataset->size = total_counter; 
-
-    printf("Dataset filled with %d images\n", total_counter );
-    return total_counter;
+    printf("Dataset filled with %lld images\n", dataset->size );
+    return 0;
 }
 
 
-
 int free_mri_image( mri_image * image ){
-    // free( image->filename );
-    free( image->inputs );
+    free( image->filename );
+    if ( image->pixels != NULL ) {
+        free( image->inputs );
+
+    }
     if ( image->pixels != NULL ) {
         free( image->pixels );
     }

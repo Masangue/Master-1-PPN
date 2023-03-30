@@ -11,6 +11,7 @@
 #include "neural_network.h"
 #include "convolution_layer.h"
 #include "dataset_manager.h"
+#include "directory_manager.h"
 #include "store.h"  
 #include "context.h"  
 #include "evaluation.h" 
@@ -50,7 +51,7 @@ int main(int argc, char *argv[])
         load_context( &context, "../data/config.cfg" );
         info_context( &context );
     }
-
+        
     mpi_share_context( &context );
 
    
@@ -67,8 +68,8 @@ int main(int argc, char *argv[])
         init_dataset( context.test_dirs, &test_dataset, &context);
     }
     mpi_share_dataset( &train_dataset );
-    // 
-    // //  Initialise The NN
+     
+    //  Initialise The NN
     // neural_network = create_neural_network(&context );
     //
     // // train
@@ -79,8 +80,9 @@ int main(int argc, char *argv[])
     
     // free
     // free_neural_network( neural_network  );
-    // free_dataset( &train_dataset ); 
-    // free_dataset( &test_dataset ); 
+
+    free_dataset( &train_dataset ); 
+    free_dataset( &test_dataset ); 
 
 
     free_context( &context ); 
