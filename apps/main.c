@@ -45,17 +45,19 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &P);
 
     // load context
+    create_context( &context );
     if( rank == ROOT ){
         load_context( &context, "../data/config.cfg" );
         info_context( &context );
     }
-    
 
     mpi_share_context( &context );
 
+    
     if( rank != ROOT ){
         info_context( &context );
     }
+
 
     //
     // // init and fill dataset

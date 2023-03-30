@@ -2,6 +2,38 @@
 #include <stdio.h>
 
 //https://github.com/hyperrealm/libconfig/blob/master/examples/c/example1.c
+int create_context( Context * context ){
+
+    context->context_path = malloc( STRING_SIZE * sizeof(char) );
+
+    context->storage_dir = malloc( STRING_SIZE * sizeof(char) );
+    context->train_dat_path = malloc( STRING_SIZE * sizeof(char) );
+    context->test_dat_path = malloc( STRING_SIZE * sizeof(char) );
+    
+    context->train_dirs = malloc( 2 * sizeof(char*) );
+    context->test_dirs = malloc( 2 * sizeof(char*) );
+    for (int j = 0; j < 2; j++){
+        context->train_dirs[j] = malloc( STRING_SIZE * sizeof(char) );
+        context->test_dirs[j] = malloc( STRING_SIZE * sizeof(char) );
+    }
+
+
+    context->topology = malloc( MAX_NN_SIZE * sizeof(int) );
+    context->activation_functions = malloc( MAX_NN_SIZE * sizeof(char*) );
+    for (int j = 0; j < MAX_NN_SIZE; j++){
+        context->activation_functions[j] = malloc( STRING_SIZE * sizeof(char) );
+    }
+
+
+    context->convo = malloc( MAX_NN_SIZE * sizeof(convolution_descriptor) );
+    for(int j = 0; j < MAX_NN_SIZE; ++j ){
+        context->convo[j].func = malloc( STRING_SIZE * sizeof(char) );
+        context->convo[j].kernel = malloc( STRING_SIZE * sizeof(char) );
+    }
+
+    return 0;
+
+}
 
 int load_context( Context * context, char * filename){
     
@@ -21,9 +53,6 @@ int load_context( Context * context, char * filename){
     }
     
     //output 
-    context->storage_dir = malloc( STRING_SIZE * sizeof(char) );
-    context->train_dat_path = malloc( STRING_SIZE * sizeof(char) );
-    context->test_dat_path = malloc( STRING_SIZE * sizeof(char) );
 
     config_lookup_string(&cfg, "output.storage",   &buffer );
     strncpy( context->storage_dir, buffer, STRING_SIZE - 1 );
@@ -40,19 +69,16 @@ int load_context( Context * context, char * filename){
     config_lookup_int(&cfg, "dataset.max_per_folder",  &context->max_per_folder );
         //Train
     setting = config_lookup ( &cfg, "dataset.train_dirs");
-    context->train_dirs = malloc( 2 * sizeof(char *) );
     for( int i = 0; i < 2; i++ ){
         buffer = config_setting_get_string_elem( setting, i);
-        context->train_dirs[i] = malloc( STRING_SIZE * sizeof(char) );
+        // context->train_dirs[i] = malloc( STRING_SIZE * sizeof(char) );
         strncpy( context->train_dirs[i], buffer, STRING_SIZE - 1 );
     }
 
         //Test
     setting = config_lookup ( &cfg, "dataset.test_dirs");
-    context->test_dirs = malloc( 2 * sizeof(char *) );
     for( int i = 0; i < 2; i++ ){
         buffer = config_setting_get_string_elem( setting, i);
-        context->test_dirs[i] = malloc( STRING_SIZE * sizeof(char) );
         strcpy( context->test_dirs[i], buffer );
     }
 
@@ -61,17 +87,14 @@ int load_context( Context * context, char * filename){
     //nn
     setting = config_lookup ( &cfg, "nn.topology");
     context->nn_size = config_setting_length ( setting ) + 2;
-    context->topology = malloc( context->nn_size * sizeof(int) );
     for( int i = 0; i < context->nn_size - 2; i++ ){
         context->topology[i] = config_setting_get_int_elem( setting, i);
     }
 
     //nn activation function
     setting = config_lookup ( &cfg, "nn.activation");
-    context->activation_functions = malloc( context->nn_size * sizeof(char *) );
     for( int i = 0; i < context->nn_size; i++ ){
         buffer = config_setting_get_string_elem( setting, i);
-        context->activation_functions[i] = malloc( STRING_SIZE * sizeof(char) );
         strcpy( context->activation_functions[i], buffer );
     }
 
@@ -94,12 +117,9 @@ int load_context( Context * context, char * filename){
     setting = config_lookup(&cfg, "image_processing.filters");
     int convo_size = config_setting_length(setting);
     context->convo_size = convo_size;
-    context->convo = malloc(convo_size * sizeof(convolution_descriptor) );
 
     for(int i = 0; i < convo_size; ++i )
     {
-        context->convo[i].func = malloc( STRING_SIZE * sizeof(char) );
-        context->convo[i].kernel = malloc( STRING_SIZE * sizeof(char) );
 
         config_setting_t *filters = config_setting_get_elem(setting, i);
 
@@ -292,36 +312,25 @@ int mpi_rcv_context  ( Context * context ){
 
     MPI_Status sta;
 
-    context->context_path = malloc( STRING_SIZE * sizeof(char) );
     MPI_Recv( context->context_path, STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta );
        
     // output
-    context->storage_dir = malloc( STRING_SIZE * sizeof(char) );
-    context->train_dat_path = malloc( STRING_SIZE * sizeof(char) );
-    context->test_dat_path = malloc( STRING_SIZE * sizeof(char) );
     MPI_Recv( context->storage_dir, STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
     MPI_Recv( context->train_dat_path, STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
     MPI_Recv( context->test_dat_path, STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
 
     //dataset
     MPI_Recv(&context->max_per_folder, 1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
-    context->train_dirs = malloc( 2 * sizeof(char*) );
-    context->test_dirs = malloc( 2 * sizeof(char*) );
     for (int j = 0; j < 2; j++){
-        context->train_dirs[j] = malloc( STRING_SIZE * sizeof(char) );
-        context->test_dirs[j] = malloc( STRING_SIZE * sizeof(char) );
         MPI_Recv( context->train_dirs[j], STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
         MPI_Recv( context->test_dirs[j], STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
     }
     
     //nn
     MPI_Recv(&context->nn_size,  1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
-    context->topology = malloc( context->nn_size * sizeof(int) );
     MPI_Recv( context->topology, context->nn_size - 2, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
 
-    context->activation_functions = malloc( context->nn_size * sizeof(char*) );
     for (int j = 0; j < context->nn_size; j++){
-        context->activation_functions[j] = malloc( STRING_SIZE * sizeof(char) );
         MPI_Recv( context->activation_functions[j], STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
     }
 
@@ -339,10 +348,7 @@ int mpi_rcv_context  ( Context * context ){
     MPI_Recv(&context->height, 1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
     MPI_Recv(&context->convo_size, 1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
     
-    context->convo = malloc(context->convo_size * sizeof(convolution_descriptor) );
     for(int j = 0; j < context->convo_size; ++j ){
-        context->convo[j].func = malloc( STRING_SIZE * sizeof(char) );
-        context->convo[j].kernel = malloc( STRING_SIZE * sizeof(char) );
         MPI_Recv(&context->convo[j].size,  1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
         MPI_Recv(context->convo[j].func,   STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
         MPI_Recv(context->convo[j].kernel, STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
