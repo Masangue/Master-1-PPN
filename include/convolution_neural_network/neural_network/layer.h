@@ -30,7 +30,7 @@ typedef struct {
 
 //layer
 void    create_layer( Layer * layer, u64 size, u64 next_size, u64 batch_size );
-void    init_layer( Layer * layer, u64 next_size, u64 batch_size );
+void    init_layer( Layer * layer, u64 batch_size );
 
 //forward
 void    compute_layer( Layer * layer1, Layer * layer2, u64 batch_iteration, activation_function_t * activation );
@@ -48,5 +48,5 @@ f64 get_bias_gradient( Layer * layer2, f64 batch_size, u64 j );
 int mpi_share_layer( Layer * layer );
 
 // debug
-void    debug( Layer * layer, u64 next_size );
+void    debug( Layer * layer );
 

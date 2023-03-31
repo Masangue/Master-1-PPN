@@ -25,9 +25,9 @@ void create_layer( Layer * layer, u64 size, u64 next_size, u64 batch_size ){
 
 
 //  Init a layer with random values
-void init_layer( Layer * layer, u64 next_size, u64 batch_size ){
+void init_layer( Layer * layer, u64 batch_size ){
     u64 size = layer->size;
-    // u64 next_size = layer->next_size;
+    u64 next_size = layer->next_size;
     for( u64 j = 0; j < next_size; j++ ){
         layer->bias[j]       = ((f64) rand() / (f64)RAND_MAX) - 0.5;
         layer->delta_bias[j] = 0.0f;
@@ -219,7 +219,7 @@ int mpi_share_layer( Layer * layer ){
 
 // Debugging function
 // Prints the whole NN in a visually clear format
-void debug( Layer * layer, u64 next_size ){
+void debug( Layer * layer ){
     printf("\n\n");
     printf("neurons : \n");
     for( u64 i = 0; i < layer->size; i++)

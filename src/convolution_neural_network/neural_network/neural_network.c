@@ -63,7 +63,7 @@ Neural_network * create_neural_network( Context * context ){
     }
 
     for(u64 i = 0; i < nn_size - 1; i++){
-        init_layer( &neural_network->layers[i], topology[i+1], context->batch_size );
+        init_layer( &neural_network->layers[i], /*topology[i+1],*/ context->batch_size );
     }
     
     prepare_activation( neural_network, context );
