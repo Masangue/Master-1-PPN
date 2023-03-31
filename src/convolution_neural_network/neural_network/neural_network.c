@@ -194,6 +194,26 @@ void prepare_activation( Neural_network * neural_network, Context * context){
 }
 
 
+////////////////////////////////////////////////////////
+////               MPI FUNCTIONS                    ////
+////////////////////////////////////////////////////////
+
+int mpi_share_neural_network( Neural_network * neural_network ){
+
+    int P;
+    MPI_Comm_size(MPI_COMM_WORLD, &P);
+
+    if ( P == 1 ) {
+        return 0;
+    }
+
+
+    for(u64 i = 0; i < neural_network->size ; i++){
+        mpi_share_layer( &neural_network->layers[i] );
+    }
+
+    return 0;
+}
 
 
 

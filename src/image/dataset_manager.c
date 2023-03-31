@@ -1,5 +1,6 @@
 #include "dataset_manager.h"
 #include <stdlib.h>
+#include <string.h>
 
 int mpi_send_dataset( Dataset * dataset ){
 
@@ -45,8 +46,8 @@ int mpi_recv_dataset( Dataset * dataset ){
    
     MPI_Status sta;
 
+    MPI_Recv( &dataset->size, 1, MPI_U64, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta );
     u64 dataset_size = dataset->size;
-    MPI_Recv( &dataset_size, 1, MPI_U64, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta );
     for (u64 j = 0; j < dataset_size; j++) {
         
         // u64 size_image = dataset->images[j].original_width * dataset->images[j].original_height; 
@@ -58,12 +59,10 @@ int mpi_recv_dataset( Dataset * dataset ){
         MPI_Recv( &dataset->images[j].original_height, 1, MPI_U64, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
         
         MPI_Recv( &dataset->images[j].value, 1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
-        
-        dataset->images[j].filename = malloc( STRING_SIZE * sizeof(char) );
-        dataset->images[j].pixels = malloc( IMAGE_SIZE * sizeof(unsigned char));
+
+        dataset->images[j] = create_mri_image();
 
         MPI_Recv( dataset->images[j].filename, STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
-
         MPI_Recv( dataset->images[j].pixels, IMAGE_SIZE, MPI_U8, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
 
     }
@@ -91,6 +90,15 @@ int mpi_share_dataset( Dataset * dataset ){
 
     return 0; 
 }
+
+mri_image create_mri_image(){
+    mri_image img;
+    img.pixels = malloc( IMAGE_SIZE * sizeof(unsigned char));
+    img.filename = malloc( STRING_SIZE * sizeof( char ));
+    img.inputs = NULL;
+    return img;
+ 
+};
 
 Dataset create_dataset( Context * context ){
    
@@ -128,9 +136,9 @@ int init_dataset( char ** dirs, Dataset * dataset, Context * context ){
 
         for (int j = 0; j < nb_files_in_current_directory ; j++) {
             int image_number = dataset->size;
-            dataset->images[image_number].pixels = malloc( IMAGE_SIZE * sizeof(unsigned char));
-            dataset->images[image_number].inputs = NULL;
-
+            
+            dataset->images[image_number] = create_mri_image();
+   
             char image_path[512];
             snprintf(image_path, sizeof( image_path ), "%s/%s", folder_name, files_name[j]);
  
@@ -138,10 +146,13 @@ int init_dataset( char ** dirs, Dataset * dataset, Context * context ){
                         &dataset->images[image_number].original_width, 
                         &dataset->images[image_number].original_height);
             dataset->images[image_number].value = i;
-            dataset->images[image_number].filename = files_name[j];
+
+            strcpy( dataset->images[image_number].filename, files_name[j] );
             dataset->images[image_number].width  = dataset->images[image_number].original_width;
             dataset->images[image_number].height = dataset->images[image_number].original_height;
             dataset->size ++; 
+
+            free(files_name[j]);
         }
         free(files_name);
     }
@@ -152,7 +163,7 @@ int init_dataset( char ** dirs, Dataset * dataset, Context * context ){
 
 int free_mri_image( mri_image * image ){
     free( image->filename );
-    if ( image->pixels != NULL ) {
+    if ( image->inputs != NULL ) {
         free( image->inputs );
 
     }

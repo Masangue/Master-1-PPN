@@ -41,6 +41,7 @@ typedef struct {
 
 // int load_dataset( char * dirs[], int dir_num, mri_image * dataset, int max_per_folder);
 
+mri_image create_mri_image();
 Dataset create_dataset( Context * context );
 int init_dataset( char ** dirs, Dataset * dataset, Context * context );
 int preprocess_dataset( Dataset * dataset, Context * context );

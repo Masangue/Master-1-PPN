@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <mpi.h>
 
 #include "type.h"
 #include "context.h"
@@ -44,6 +45,9 @@ void    update_batch_pointer(Neural_network * neural_network, u64 offset );
 
 // activation
 void    prepare_activation( Neural_network * neural_network, Context * context);
+
+// mpi
+int mpi_share_neural_network( Neural_network * neural_network );
 
 //misc
 void    shuffle(u64 size, u64 * tab);

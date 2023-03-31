@@ -8,6 +8,7 @@
 //  Allocate a layer
 void create_layer( Layer * layer, u64 size, u64 next_size, u64 batch_size ){
     layer->size = size;
+    layer->next_size = next_size;
     layer->weights       = aligned_alloc(64, size * next_size  * sizeof(f64) );
     layer->bias          = aligned_alloc(64, next_size *         sizeof(f64) );
 
@@ -26,6 +27,7 @@ void create_layer( Layer * layer, u64 size, u64 next_size, u64 batch_size ){
 //  Init a layer with random values
 void init_layer( Layer * layer, u64 next_size, u64 batch_size ){
     u64 size = layer->size;
+    // u64 next_size = layer->next_size;
     for( u64 j = 0; j < next_size; j++ ){
         layer->bias[j]       = ((f64) rand() / (f64)RAND_MAX) - 0.5;
         layer->delta_bias[j] = 0.0f;
@@ -173,6 +175,40 @@ f64 get_bias_gradient( Layer * layer2, f64 batch_size, u64 j ){
 
     return bias_gradient = bias_gradient / batch_size;
 
+}
+
+////////////////////////////////////////////////////////
+////                  MPI                           ////
+////////////////////////////////////////////////////////
+
+int mpi_share_layer( Layer * layer ){
+
+    int rank, P;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &P);
+
+    if ( P == 1 ) {
+        return 0;
+    }
+
+    u64 size = layer->size;
+    u64 next_size = layer->next_size;
+
+    if ( rank == MASTER_RANK ){
+
+        for (int i = 0; i < P; i++) {
+        if ( i == MASTER_RANK ) continue;
+        MPI_Ssend(layer->weights, size * next_size, MPI_U64, i, 1000, MPI_COMM_WORLD );
+        MPI_Ssend(layer->bias, next_size, MPI_U64, i, 1000, MPI_COMM_WORLD );
+        }
+
+        }
+    else {
+        MPI_Status sta;
+        MPI_Recv(layer->weights, size * next_size, MPI_U64, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+        MPI_Recv(layer->bias, next_size, MPI_U64, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
+    }
+    return 0; 
 }
 
 

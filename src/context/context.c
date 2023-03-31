@@ -1,5 +1,6 @@
 #include "context.h"
 #include <stdio.h>
+#include <string.h>
 
 //https://github.com/hyperrealm/libconfig/blob/master/examples/c/example1.c
 int create_context( Context * context ){
@@ -43,7 +44,8 @@ int load_context( Context * context, char * filename){
     
     const char * buffer;
 
-    context->context_path = filename;
+    // context->context_path = filename;
+    strcpy(context->context_path, filename);
 
     if(! config_read_file( &cfg, filename)) {
         fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
@@ -204,13 +206,13 @@ int info_context( Context * context ){
 
 int free_context( Context * context ){
 
-    for( int i = 0; i < context->nn_size; i++ ){
+    for( int i = 0; i < MAX_NN_SIZE; i++ ){
         free(context->activation_functions[i]);
     }
     free(context->activation_functions);
     
 
-    for(int i = 0; i < context->convo_size; ++i )
+    for(int i = 0; i < MAX_NN_SIZE; ++i )
     {
         free( context->convo[i].func );
         free( context->convo[i].kernel );
@@ -227,7 +229,7 @@ int free_context( Context * context ){
         free(context->train_dirs[i]);
     }
     free(context->train_dirs);
-    // free(context->context_path);
+    free(context->context_path);
     free(context->storage_dir);
     free(context->train_dat_path);
     free(context->test_dat_path);

@@ -32,7 +32,7 @@ target_include_directories(convolution_neural_network PUBLIC
             "${CL_INCLUDE_DIR}" "${CT_INCLUDE_DIR}"  )
 
 target_link_libraries(convolution_neural_network PRIVATE 
-             image context )
+             image context mpi )
 
 # add_subdirectory(convolution_layer)
 # add_subdirectory(neural_network)

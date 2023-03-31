@@ -15,6 +15,7 @@
 typedef void activation_function_t(f64 * src, f64 * dst, u64 size) ;
 typedef struct {
     u64   size;
+    u64   next_size;
     f64 * weights;
     f64 * bias;
     f64 * delta_weights;
@@ -43,8 +44,9 @@ void    backpropagate( Layer * layer1, Layer * layer2, f64 eta_, f64 alpha_, u64
 f64 get_weight_gradient( Layer * layer1, Layer * layer2, f64 batch_size, u64 i, u64 j );
 f64 get_bias_gradient( Layer * layer2, f64 batch_size, u64 j );
 
+// mpi
+int mpi_share_layer( Layer * layer );
+
 // debug
 void    debug( Layer * layer, u64 next_size );
-
-
 
