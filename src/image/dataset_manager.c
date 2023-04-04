@@ -1,4 +1,5 @@
 #include "dataset_manager.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -18,7 +19,8 @@ int mpi_send_dataset( Dataset * dataset ){
         for (u64 j = 0; j < dataset_size; j++) {
             
             // u64 size_image = dataset->images[j].original_width * dataset->images[j].original_height; 
-            
+           
+            // printf("send %lu\n", dataset->images[j].width );
             MPI_Ssend( &dataset->images[j].width, 1, MPI_U64, i, 1000, MPI_COMM_WORLD );
             MPI_Ssend( &dataset->images[j].height, 1, MPI_U64, i, 1000, MPI_COMM_WORLD );
 
@@ -50,7 +52,7 @@ int mpi_recv_dataset( Dataset * dataset ){
     u64 dataset_size = dataset->size;
     for (u64 j = 0; j < dataset_size; j++) {
         
-        // u64 size_image = dataset->images[j].original_width * dataset->images[j].original_height; 
+        dataset->images[j] = create_mri_image();
         
         MPI_Recv( &dataset->images[j].width, 1, MPI_U64, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
         MPI_Recv( &dataset->images[j].height, 1, MPI_U64, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
@@ -60,7 +62,6 @@ int mpi_recv_dataset( Dataset * dataset ){
         
         MPI_Recv( &dataset->images[j].value, 1, MPI_INT, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
 
-        dataset->images[j] = create_mri_image();
 
         MPI_Recv( dataset->images[j].filename, STRING_SIZE, MPI_CHAR, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
         MPI_Recv( dataset->images[j].pixels, IMAGE_SIZE, MPI_U8, MASTER_RANK, 1000, MPI_COMM_WORLD, &sta  );
@@ -85,8 +86,9 @@ int mpi_share_dataset( Dataset * dataset ){
     if ( rank == MASTER_RANK )
         mpi_send_dataset( dataset );
         // printf("do nothing\n");
-    else
+    else{
         mpi_recv_dataset( dataset );
+    }
 
     return 0; 
 }

@@ -26,6 +26,21 @@ typedef struct {
 
 } Layer;
 
+typedef struct {
+    int a;
+} Mpi_layer_context;
+
+typedef struct {
+    int * workload;
+    int * displs;
+    int rank;
+    int P;
+    Mpi_layer_context * mpi_layer_context;
+
+} Mpi_neural_network_context;
+
+
+
 
 
 //layer
@@ -46,6 +61,8 @@ f64 get_bias_gradient( Layer * layer2, f64 batch_size, u64 j );
 
 // mpi
 int mpi_share_layer( Layer * layer );
+// int mpi_gather_delta_layer( Layer * layer, Mpi_layer_context * mpi_layer_context );
+int mpi_gather_delta_layer( Layer * layer, Mpi_neural_network_context * mpi_nn_context );
 
 // debug
 void    debug( Layer * layer );

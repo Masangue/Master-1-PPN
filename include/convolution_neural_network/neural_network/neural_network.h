@@ -48,7 +48,11 @@ void    prepare_activation( Neural_network * neural_network, Context * context);
 
 // mpi
 int mpi_share_neural_network( Neural_network * neural_network );
+Mpi_neural_network_context create_mpi_neural_network_context(Neural_network * neural_network, int batch_size );
+int free_mpi_neural_network_context(Mpi_neural_network_context * mpi_nn_context);
 
+int mpi_gather_delta_neural_network( Neural_network * neural_network, 
+                                    Mpi_neural_network_context * mpi_nn_context );
 //misc
 void    shuffle(u64 size, u64 * tab);
 void    range(u64 size, u64 * tab);

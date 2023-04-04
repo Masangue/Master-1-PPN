@@ -53,6 +53,10 @@ int main(int argc, char *argv[])
     }
     mpi_share_context( &context );
 
+    if( rank != ROOT ){
+        info_context( &context );
+    }
+
 
     // dataset
     train_dataset = create_dataset( &context );
@@ -62,6 +66,7 @@ int main(int argc, char *argv[])
         init_dataset( context.test_dirs, &test_dataset, &context);
     }
     mpi_share_dataset( &train_dataset );
+    mpi_share_dataset( &test_dataset );
     
 
     //  Initialise The NN
@@ -69,7 +74,7 @@ int main(int argc, char *argv[])
     mpi_share_neural_network( neural_network );
     
     // // train
-    // train( &context, &train_dataset, &test_dataset, neural_network );
+    train( &context, &train_dataset, &test_dataset, neural_network );
     // // store_neural_network( &context, neural_network);
     //             
     MPI_Finalize();

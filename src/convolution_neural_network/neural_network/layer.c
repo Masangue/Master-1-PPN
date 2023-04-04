@@ -212,6 +212,34 @@ int mpi_share_layer( Layer * layer ){
 }
 
 
+int mpi_gather_delta_layer( Layer * layer, Mpi_neural_network_context * mpi_nn_context ){
+    // envoyer les 
+    int rank = mpi_nn_context->rank;
+    int P    = mpi_nn_context->P;
+    int workload    = mpi_nn_context->workload[rank];
+    int size    = layer->size;
+
+    // send buf * workload
+    // recv buf + stride 
+
+    if ( rank != MASTER_RANK ){
+        MPI_Ssend(layer->neurons      , size * workload, MPI_U64, MASTER_RANK, 1000, MPI_COMM_WORLD );
+        MPI_Ssend(layer->delta_neurons, size * workload, MPI_U64, MASTER_RANK, 1000, MPI_COMM_WORLD );
+    }
+
+    else {
+        MPI_Status sta;
+        for (int i = 0; i < P; i++) {
+            if ( i == MASTER_RANK ) continue;
+            int displs   = mpi_nn_context->displs[i];
+            int workload = mpi_nn_context->workload[i];
+            MPI_Recv(layer->neurons + displs*size      , size * workload, MPI_U64, i, 1000, MPI_COMM_WORLD, &sta  );
+            MPI_Recv(layer->delta_neurons + displs*size, size * workload, MPI_U64, i, 1000, MPI_COMM_WORLD, &sta  );
+        }
+    }
+    return 0;
+}
+
 ////////////////////////////////////////////////////////
 ////                 DEBUG                          ////
 ////////////////////////////////////////////////////////
