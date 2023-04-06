@@ -9,26 +9,9 @@ void log_score(FILE * fp, u64 epoch, Score * score){
 }
 
 
-// int work_repartition( int batch_size ){
-//     int rank, P;
-//     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-//     MPI_Comm_size(MPI_COMM_WORLD, &P);
-//   
-//     int workload = 0;
-//     for (int i = rank; i < batch_size; i+=P ) {
-//         workload++;
-//         printf(" T%2d working on  %d  \n", rank, i );    
-//     }
-//
-//     // printf(" T%2d workload %d \n",rank, workload );    
-//     return workload;
-//
-// }
-
 f64 stochastic_gradient_descent( Dataset * dataset, Neural_network * neural_network, Context * context, Score * score, u64 * scheduler, FILE * fp, u64 epoch, u64 is_learning ){
  
     u64 nn_size = neural_network->size;
-    // u64 output_size = neural_network->layers[nn_size-1].size;
     
     init_score(score);
     for( u64 np = 0 ; np < dataset->size ; np++ ) {
@@ -59,41 +42,32 @@ f64 one_batch_train( Dataset * dataset, Neural_network * neural_network,
     int rank, P;
     rank = mpi_nn_context->rank;
     P    = mpi_nn_context->P;
-    // MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    // MPI_Comm_size(MPI_COMM_WORLD, &P);
 
 
-    // u64 workload = work_repartition( batch_size );
-    // u64 workload = 1;
     u64 workload = mpi_nn_context->workload[rank]; 
 
     for( u64 j = 0 ; j < workload ; j++ ) {
         u64 global_batch_iteration = rank + j * P ; // global batch iteration
-        // printf(" T%2d working on  %lld  \n", rank, global_batch_iteration );    
         u64 local_batch_iteration = j ; // global batch iteration
-        // printf("T%d - bi : %llu\n", rank, batch_iteration);
         u64 p = scheduler[ global_batch_iteration ];
 
-        //
-        // update_batch_pointer( neural_network, bi);
 
         // input and expected
         set_input_output(neural_network, dataset->images[p].inputs,
                          &dataset->images[p].value, local_batch_iteration );
-
         //
         batch_forward_propagation(neural_network, context, local_batch_iteration);
-        update_score( &neural_network->layers[neural_network->size - 1], 
+
+        if( rank == ROOT )
+            update_score( &neural_network->layers[neural_network->size - 1], 
                      neural_network->expected, score, local_batch_iteration );
     }
     mpi_gather_delta_neural_network( neural_network, mpi_nn_context );
   
-    // gatherv ;
     if( rank == ROOT )
         batch_backward_propagation( neural_network, context, batch_size );
 
     mpi_share_neural_network(neural_network);
-    // printf("fin \n");
 
     return 0;
 }
@@ -188,7 +162,7 @@ int train(Context * context, Dataset * train_dataset,
             stochastic_gradient_descent( test_dataset,  neural_network, context, 
                                         &score, test_scheduler,  fp_test,  epoch, 0 );
         
-        }
+    }
 
     free(test_scheduler);
     free(train_scheduler);
