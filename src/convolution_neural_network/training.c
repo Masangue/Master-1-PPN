@@ -17,11 +17,11 @@ f64 stochastic_gradient_descent( Dataset * dataset, Neural_network * neural_netw
     for( u64 np = 0 ; np < dataset->size ; np++ ) {
         u64 p = scheduler[np];
 
-        set_input_output(neural_network, dataset->images[p].inputs, &dataset->images[p].value, 0 );
+        set_input_output(neural_network, dataset->images[p].inputs, &dataset->images[p].value );
         
         stochastic_forward_compute( neural_network, context );
         update_score(  &neural_network->layers[nn_size - 1], 
-                     neural_network->expected, score, 0 );
+                     neural_network->expected, score );
 
         if( is_learning){
             stochastic_backward_compute( neural_network, context );
@@ -54,15 +54,14 @@ f64 one_batch_train( Dataset * dataset, Neural_network * neural_network,
 
         // input and expected
         set_input_output(neural_network, dataset->images[p].inputs,
-                         &dataset->images[p].value, local_batch_iteration );
+                         &dataset->images[p].value );
         //
         batch_forward_propagation(neural_network, context, local_batch_iteration);
 
-        if( rank == ROOT )
-            update_score( &neural_network->layers[neural_network->size - 1], 
-                     neural_network->expected, score, local_batch_iteration );
+        update_score( &neural_network->layers[neural_network->size - 1], 
+                    neural_network->expected, score );
     }
-    mpi_gather_delta_neural_network( neural_network, mpi_nn_context );
+    mpi_reduce_gradient( neural_network, mpi_nn_context );
   
     if( rank == ROOT )
         batch_backward_propagation( neural_network, context, batch_size );
@@ -81,8 +80,7 @@ f64 batch_gradient_descent( Dataset * dataset, Neural_network * neural_network,
     u64 batch_size = context->batch_size;
     u64 dataset_size = dataset->size;
 
-    if (mpi_nn_context->rank == MASTER_RANK)
-        init_score(score);
+    init_score(score);
    
     u64 number_of_complete_batch = dataset_size / batch_size;
     for( u64 i = 0 ; i < number_of_complete_batch ; i++ ) {
@@ -95,7 +93,8 @@ f64 batch_gradient_descent( Dataset * dataset, Neural_network * neural_network,
     // if( dataset_size % batch_size > 0)
     //     one_batch_train(dataset, neural_network, context, dataset_size % batch_size,
     //                     scheduler + number_of_complete_batch * batch_size, score);
-
+    
+    mpi_sync_score( score, mpi_nn_context); 
     if (mpi_nn_context->rank == MASTER_RANK) {
         process_score( score );
         log_score(fp, epoch, score);
@@ -126,15 +125,6 @@ int train(Context * context, Dataset * train_dataset,
         fp_test = fopen( context->test_dat_path,"w"); 
     }
 
-    // return 0;
-
- 
-    // if( rank != ROOT ){
-    //     printf(" w : %lu - h %lu \n",  train_dataset->images[0].width, train_dataset->images[0].height );
-    //     // display_ascii_image(train_dataset->images[0].pixels, train_dataset->images[0].width, train_dataset->images[0].height);
-    //     display_ascii_image(train_dataset->images[0].pixels, train_dataset->images[0].width, train_dataset->images[0].height);
-    //
-    // }
 
     Score score;
 
@@ -158,9 +148,10 @@ int train(Context * context, Dataset * train_dataset,
         // else
             // training_score = stochastic_gradient_descent( train_dataset, neural_network, context, &score, train_scheduler, fp_train, epoch, 1 );
 
-        if( rank == ROOT )
-            stochastic_gradient_descent( test_dataset,  neural_network, context, 
-                                        &score, test_scheduler,  fp_test,  epoch, 0 );
+        // Test
+        // if( rank == ROOT )
+        //     stochastic_gradient_descent( test_dataset,  neural_network, context, 
+        //                                 &score, test_scheduler,  fp_test,  epoch, 0 );
         
     }
 
@@ -169,6 +160,7 @@ int train(Context * context, Dataset * train_dataset,
     free_mpi_neural_network_context( &mpi_nn_context );
 
     if( rank == ROOT ){
+        printf("P%d closing\n", rank);
         fclose(fp_train);
         fclose(fp_test);
     }

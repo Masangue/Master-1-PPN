@@ -5,7 +5,7 @@ set(CT_INCLUDE_DIR ${INCLUDE_DIR}/context)
 set(IMAGE_INCLUDE_DIR ${INCLUDE_DIR}/image)
 
 add_library(convolution_neural_network STATIC
-        store.c ${CURRENT_INCLUDE_DIR}/store.h
+        # store.c ${CURRENT_INCLUDE_DIR}/store.h
         evaluation.c ${CURRENT_INCLUDE_DIR}/evaluation.h
         training.c ${CURRENT_INCLUDE_DIR}/training.h
  

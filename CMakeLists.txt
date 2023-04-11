@@ -12,7 +12,7 @@ add_subdirectory(extern)
 
 set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 
-set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -g -ggdb -g3 -Wall -Wextra  -march=native -Ofast -mtune=native")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -ggdb -gdwarf  -g3 -Wall -Wextra  -march=native -Ofast -mtune=native")
 
 
 add_subdirectory(src)

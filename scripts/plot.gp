@@ -18,6 +18,7 @@ set xlabel "epoch"
 
 ###### PRECISION ######
 
+set yrange [0:1];
 img1 = "out/img/precision.png"
 title1 = "precision"
 
@@ -86,6 +87,8 @@ set ylabel "True positive Rate"
 set xlabel "False Positive Rate" 
 
 
+set yrange [0:1];
+set xrange [0:1];
 
 set title title1
 

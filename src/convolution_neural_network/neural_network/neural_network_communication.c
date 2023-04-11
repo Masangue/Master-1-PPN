@@ -9,9 +9,9 @@ int mpi_share_neural_network( Neural_network * neural_network ){
     int P;
     MPI_Comm_size(MPI_COMM_WORLD, &P);
 
-    if ( P == 1 ) {
-        return 0;
-    }
+    // if ( P == 1 ) {
+    //     return 0;
+    // }
 
 
     for(u64 i = 0; i < neural_network->size ; i++){
@@ -21,8 +21,9 @@ int mpi_share_neural_network( Neural_network * neural_network ){
     return 0;
 }
 
-int mpi_gather_delta_neural_network( Neural_network * neural_network, 
-                                    Mpi_neural_network_context * mpi_nn_context ){
+
+int mpi_reduce_gradient( Neural_network * neural_network, 
+                            Mpi_neural_network_context * mpi_nn_context ){
 
     int P;
     MPI_Comm_size(MPI_COMM_WORLD, &P);
@@ -33,8 +34,7 @@ int mpi_gather_delta_neural_network( Neural_network * neural_network,
 
     // backprop is from input to output layer so we need to send from the input to the ouput
     for(u64 i = 0; i < neural_network->size ; i++){
-        mpi_gather_delta_layer( &neural_network->layers[i], mpi_nn_context );
-        // mpi_gather_delta_layer( &neural_network->layers[i], &mpi_nn_context->mpi_layer_context[i] );
+        mpi_reduce_gradient_layer( &neural_network->layers[i], mpi_nn_context );
     }
 
     return 0;
@@ -65,7 +65,7 @@ Mpi_neural_network_context create_mpi_neural_network_context(Neural_network * ne
     // debug log
     if(rank == MASTER_RANK)
         for (int i = 0; i < P; i++ ) 
-            printf(" T%2d working on  %d  \n", i, mpi_nn_context.workload[i] );    
+            printf(" T%2d working on  %3d images in the batch  %d\n", i, mpi_nn_context.workload[i], batch_size );    
 
 
     return mpi_nn_context;
