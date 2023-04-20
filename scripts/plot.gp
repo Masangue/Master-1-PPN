@@ -16,6 +16,12 @@ set key autotitle columnhead
 set ylabel "err"
 set xlabel "epoch" 
 
+img1 = "out/img/precision.png"
+title1 = "precision"
+set terminal "png" size 1000,1200
+set output img1
+
+set multiplot layout 3,2
 ###### PRECISION ######
 
 set yrange [0:1];
@@ -25,8 +31,8 @@ title1 = "precision"
 set title title1
 
 ##
-set terminal "png" size 800,400
-set output img1
+# set terminal "png" size 800,400
+# set output img1
 
 plot "out/data/test.dat" using 1:2 w lp t "test",\
      "out/data/train.dat" using 1:2 w lp  t "train" 
@@ -40,8 +46,8 @@ title1 = "recall"
 set title title1
 
 ##
-set terminal "png" size 800,400
-set output img1
+# set terminal "png" size 800,400
+# set output img1
 
 plot "out/data/test.dat" using 1:3 w lp  t "test",\
      "out/data/train.dat" using 1:3 w lp t "train" 
@@ -55,8 +61,8 @@ title1 = "accuracy"
 set title title1
 
 ##
-set terminal "png" size 800,400
-set output img1
+# set terminal "png" size 800,400
+# set output img1
 
 plot "out/data/test.dat" using 1:4 w lp  t "test", \
      "out/data/train.dat" using 1:4 w lp t "train" 
@@ -71,8 +77,8 @@ title1 = "f1"
 set title title1
 
 ##
-set terminal "png" size 800,400
-set output img1
+# set terminal "png" size 800,400
+# set output img1
 
 plot "out/data/test.dat" using 1:5 w lp  t "test", \
      "out/data/train.dat" using 1:5 w lp t "train" 
@@ -93,8 +99,8 @@ set xrange [0:1];
 set title title1
 
 ##
-set terminal "png" size 450,400
-set output img1
+# set terminal "png" size 450,400
+# set output img1
 
 plot "out/data/test.dat" using 6:3 w p  t "test", \
      "out/data/train.dat" using 6:3 w p t "train" 

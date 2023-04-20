@@ -1,6 +1,8 @@
 #include "training.h"
+#include "layer.h"
 #include "neural_network.h"
 #include <stdio.h>
+#include <unistd.h>
 
 
 void log_score(FILE * fp, u64 epoch, Score * score){
@@ -63,10 +65,10 @@ f64 one_batch_train( Dataset * dataset, Neural_network * neural_network,
     }
     mpi_reduce_gradient( neural_network, mpi_nn_context );
   
-    if( rank == ROOT )
-        batch_backward_propagation( neural_network, context, batch_size );
+    // if( rank == ROOT )
+    batch_backward_propagation( neural_network, context, batch_size );
 
-    mpi_share_neural_network(neural_network);
+    // mpi_share_neural_network(neural_network);
 
     return 0;
 }
@@ -88,6 +90,9 @@ f64 batch_gradient_descent( Dataset * dataset, Neural_network * neural_network,
         one_batch_train(dataset, neural_network, context, mpi_nn_context, 
                         batch_size, scheduler + batch_size * i, score);
     }
+
+    // debug( &neural_network->layers[3] );
+    // getchar();
 
     // we suppose for now that this part is not significant
     // if( dataset_size % batch_size > 0)
@@ -139,8 +144,9 @@ int train(Context * context, Dataset * train_dataset,
 
     float training_score = 0; 
     for( u64 epoch = 0; epoch < (u64) context->max_epoch /*&& training_score + context->precision < 1 */; epoch++ ){
+        context->eta_ = context->eta_ * 0.97;
         shuffle(train_dataset->size, train_scheduler);
-        
+
         // if (context->batch_size > 1)
         training_score = batch_gradient_descent( train_dataset, neural_network, 
                                                 context, &mpi_nn_context, &score, 
@@ -149,10 +155,12 @@ int train(Context * context, Dataset * train_dataset,
             // training_score = stochastic_gradient_descent( train_dataset, neural_network, context, &score, train_scheduler, fp_train, epoch, 1 );
 
         // Test
-        // if( rank == ROOT )
-        //     stochastic_gradient_descent( test_dataset,  neural_network, context, 
-        //                                 &score, test_scheduler,  fp_test,  epoch, 0 );
-        
+
+        if( rank == ROOT )
+            stochastic_gradient_descent( test_dataset,  neural_network, context, 
+                                        &score, test_scheduler,  fp_test,  epoch, 0 );
+    
+        // 
     }
 
     free(test_scheduler);
