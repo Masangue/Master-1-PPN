@@ -21,6 +21,9 @@
 #define NB_MAX_LAYER   50
 #define NB_MAX_OUTPUTS 50
 
+void sync(){
+    MPI_Barrier(MPI_COMM_WORLD);
+}
 
 /*  NN-training function, calling previously defined functions 
     The function starts by loading the "train" dataset and 
@@ -65,6 +68,7 @@ int main(int argc, char *argv[])
         init_dataset( context.train_dirs, &train_dataset, &context);
         init_dataset( context.test_dirs, &test_dataset, &context);
     }
+    sync(); 
     mpi_share_dataset( &train_dataset );
     mpi_share_dataset( &test_dataset );
     

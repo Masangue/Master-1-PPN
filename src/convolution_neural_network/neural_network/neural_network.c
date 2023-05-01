@@ -136,12 +136,15 @@ void batch_forward_propagation( Neural_network * neural_network, Context * conte
     
     compute_error_gradient( &neural_network->layers[nn_size - 1], neural_network->expected );
     
-    for(u64 i = nn_size - 2; i > 0; i--){
+    for(int i = nn_size - 2; i > 0; i--){
         compute_gradient( &neural_network->layers[i], &neural_network->layers[i+1],
                          neural_network->activation_d_function[i] );
 
+
         accumulate_gradient( &neural_network->layers[i], &neural_network->layers[i+1], local_batch_iteration );
+
     }
+    accumulate_gradient( &neural_network->layers[0], &neural_network->layers[0+1], local_batch_iteration );
 
 }
 
@@ -180,6 +183,10 @@ void prepare_activation( Neural_network * neural_network, Context * context){
         else if(strcmp(context->activation_functions[i], "lrelu")==0){
             neural_network->activation_function[i] = &apply_leaky_relu;
             neural_network->activation_d_function[i] = &apply_d_leaky_relu;
+        }
+        else if(strcmp(context->activation_functions[i], "tanh")==0){
+            neural_network->activation_function[i] = &apply_tanh;
+            neural_network->activation_d_function[i] = &apply_d_tanh;
         }
         else {
             neural_network->activation_function[i] = &apply_sigmoid;

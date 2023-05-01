@@ -29,6 +29,9 @@ static const u8 blur_3x3 [9] = {
 
 
 static const u8 sobel_3x3 [9] = {
+  1 , 2 , 1 ,
+  0 , 1 , 0 ,
+  1 , -2 , 1 
 };
 
 
