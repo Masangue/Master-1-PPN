@@ -212,11 +212,6 @@ unsigned char * apply_convolution_filters( u8 * image_ptr, u8 * buffer_ptr,
     for (u64 i = 0; i < number_of_layer; i++) {
        funcs[i](&image_ptr, &buffer_ptr, &image_height, &image_width, kernel[i]);    
     }
-    // convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5);
-    // max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width, NULL );
-    // convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5);
-    // max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width, NULL );
-    // max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width, NULL );
 
     u8 * inputs = aligned_alloc( 64, image_height * image_width * sizeof(u8) );
     memcpy(inputs, image_ptr, sizeof(u8) * image_height * image_width );
@@ -224,23 +219,5 @@ unsigned char * apply_convolution_filters( u8 * image_ptr, u8 * buffer_ptr,
     return inputs;
 
 
-      
- //    convolution_3X3(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_3x3, 1 );
- //    sobel_3X3( &image_ptr, &buffer_ptr, &image_height, &image_width, 200 );
- //    avg_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
- //    convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5, 1 );
- //    max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
- //    convolution_3X3(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_3x3, 1 );
-
-    // convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5, 1 );
-    // avg_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
-    // convolution_3X3(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5, 1 );
-    // convolution_5X5(&image_ptr, &buffer_ptr, &image_height, &image_width, blur_5x5, 1 );
-  
-    // max_pool_2X2   (&image_ptr, &buffer_ptr, &image_height, &image_width );
-   
-    // printf("%ld\n", image_width * image_height);
-    // write_ppm("_ppm.ppm", image_ptr , image_width, image_height);
-    // exit(0);
     }
 

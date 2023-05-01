@@ -6,10 +6,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <mpi.h>
+
 
 
 #include "image_io.h"
 #include "context.h"
+#include "directory_manager.h"
 
 
 #include "type.h"
@@ -37,11 +40,14 @@ typedef struct {
 } Dataset;
 
 // int load_dataset( char * dirs[], int dir_num, mri_image * dataset, int max_per_folder);
-int count_file_in_directory(char * foldername);
 
-void init_dataset( Dataset * dataset, Context * context );
-int load_dataset( char ** dirs, Dataset * dataset, Context * context );
+mri_image create_mri_image();
+Dataset create_dataset( Context * context );
+int init_dataset( char ** dirs, Dataset * dataset, Context * context );
 int preprocess_dataset( Dataset * dataset, Context * context );
 
 int free_dataset( Dataset * dataset );
 
+int mpi_share_dataset( Dataset * dataset );
+int mpi_send_dataset( Dataset * dataset );
+int mpi_recv_dataset( Dataset * dataset );

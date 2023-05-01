@@ -21,4 +21,6 @@ void apply_d_relu( f64 * src, f64 * dst, u64 size);
 void apply_relu( f64 * src, f64 * dst, u64 size );
 void apply_leaky_relu( f64 * src, f64 * dst, u64 size );
 void apply_d_leaky_relu( f64 * src, f64 * dst, u64 size );
+void apply_tanh( f64 * src, f64 * dst, u64 size );
+void apply_d_tanh( f64 * src, f64 * dst, u64 size );
 

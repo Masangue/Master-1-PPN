@@ -25,5 +25,6 @@ typedef struct {
 
 
 void init_score( Score * score );
-void update_score( Layer * output_layer, f64 * expected, Score * score, u64 batch_iteration );
+int mpi_sync_score( Score * score, Mpi_neural_network_context * mpi_nn_context );
+void update_score( Layer * output_layer, f64 * expected, Score * score );
 void process_score( Score * score );

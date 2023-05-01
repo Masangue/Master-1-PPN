@@ -12,5 +12,7 @@ typedef float f32;
 
 typedef int i32;
 
+#define MPI_U64 MPI_UNSIGNED_LONG_LONG
+#define MPI_U8 MPI_UNSIGNED_CHAR
 
 #endif

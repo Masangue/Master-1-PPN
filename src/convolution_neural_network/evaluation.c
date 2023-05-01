@@ -16,20 +16,16 @@ void init_score( Score * score ){
 
 }
 
-void update_score( Layer * output_layer, f64 * expected, Score * score, u64 batch_iteration ) {
+void update_score( Layer * output_layer, f64 * expected, Score * score ) {
     u64 size = output_layer->size;
-    u64 offset1 = batch_iteration * size;
     
     f64 err = 0;
     for( u64 i = 0; i < size; i++ ){
-            err += sqrt(pow(expected[i] - output_layer->neurons[offset1 + i],2));
+            err += sqrt(pow(expected[i] - output_layer->neurons[ i ],2));
     }
 
     err = err / size;
     
-    // only work for size = 1
-    // will be update later
-
     // expected 0 = négatif 
     // expected 1 = positif
     if(expected[0] > 0.5 ){
@@ -44,6 +40,26 @@ void update_score( Layer * output_layer, f64 * expected, Score * score, u64 batc
         else
             score->false_positive++;            
         }
+
+}
+
+int mpi_sync_score( Score * score, Mpi_neural_network_context * mpi_nn_context ){
+    int rank = mpi_nn_context->rank;
+    if( rank == MASTER_RANK ){
+        MPI_Reduce(MPI_IN_PLACE, &score->true_positive,  1 , MPI_INT, MPI_SUM, MASTER_RANK, MPI_COMM_WORLD);
+        MPI_Reduce(MPI_IN_PLACE, &score->true_negative,  1 , MPI_INT, MPI_SUM, MASTER_RANK, MPI_COMM_WORLD);
+        MPI_Reduce(MPI_IN_PLACE, &score->false_positive, 1 , MPI_INT, MPI_SUM, MASTER_RANK, MPI_COMM_WORLD);
+        MPI_Reduce(MPI_IN_PLACE, &score->false_negative, 1 , MPI_INT, MPI_SUM, MASTER_RANK, MPI_COMM_WORLD);
+     
+    }
+    else{
+        MPI_Reduce(&score->true_positive,  NULL,  1 , MPI_INT, MPI_SUM, MASTER_RANK, MPI_COMM_WORLD);
+        MPI_Reduce(&score->true_negative,  NULL,  1 , MPI_INT, MPI_SUM, MASTER_RANK, MPI_COMM_WORLD);
+        MPI_Reduce(&score->false_positive, NULL,  1 , MPI_INT, MPI_SUM, MASTER_RANK, MPI_COMM_WORLD);
+        MPI_Reduce(&score->false_negative, NULL,  1 , MPI_INT, MPI_SUM, MASTER_RANK, MPI_COMM_WORLD);
+    }
+
+    return 0;
 
 }
 
@@ -72,7 +88,7 @@ void process_score( Score * score ) {
         f1 = 0;
     
     // printf(" -> %lf, %lf, %lf, %lf\n", recall, specificity, precision,  accuracy );
-    printf(" -> tp : %d, tn : %d, fp : %d, fn : %d\n", tp, tn, fp, fn );
+    printf(" -> tp : %d, tn : %d, fp : %d, fn : %d tot = %d\n", tp, tn, fp, fn, tp+tn+fp+fn );
 
 
     // double f1 = 
