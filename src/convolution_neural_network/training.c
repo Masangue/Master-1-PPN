@@ -16,17 +16,26 @@ f64 stochastic_gradient_descent( Dataset * dataset, Neural_network * neural_netw
     u64 nn_size = neural_network->size;
     
     init_score(score);
-    for( u64 np = 0 ; np < dataset->size ; np++ ) {
-        u64 p = scheduler[np];
 
-        set_input_output(neural_network, dataset->images[p].inputs, &dataset->images[p].value );
-        
-        stochastic_forward_compute( neural_network, context );
-        update_score(  &neural_network->layers[nn_size - 1], 
-                     neural_network->expected, score );
+    #pragma omp parallel
+    {
 
-        if( is_learning){
-            stochastic_backward_compute( neural_network, context );
+        for( u64 np = 0 ; np < dataset->size ; np++ ) {
+            u64 p = scheduler[np];
+
+            set_input_output(neural_network, dataset->images[p].inputs, &dataset->images[p].value );
+            
+            stochastic_forward_compute( neural_network, context );
+
+            #pragma omp single
+            {
+                update_score(  &neural_network->layers[nn_size - 1], 
+                            neural_network->expected, score );
+            }
+
+            if( is_learning){
+                stochastic_backward_compute( neural_network, context );
+            }
         }
     }
 

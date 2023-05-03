@@ -107,11 +107,17 @@ void stochastic_backward_compute( Neural_network * neural_network, Context * con
     compute_error_gradient( &neural_network->layers[nn_size - 1] , 
                          neural_network->expected );
 
+    #pragma omp barrier
+
     for(u64 i = nn_size - 2; i > 0; i--){
         compute_gradient( &neural_network->layers[i], &neural_network->layers[i+1],
                          neural_network->activation_d_function[i] );
+        
+        #pragma omp barrier
 
         accumulate_gradient( &neural_network->layers[i], &neural_network->layers[i+1], 0 );
+
+        #pragma omp barrier
     }
 
     for(u64 i = 0; i < nn_size - 1; i++){
