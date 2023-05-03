@@ -21,7 +21,7 @@ void update_score( Layer * output_layer, f64 * expected, Score * score ) {
     
     f64 err = 0;
     for( u64 i = 0; i < size; i++ ){
-            err += sqrt(pow(expected[i] - output_layer->neurons[ i ],2));
+        err += sqrt(pow(expected[i] - output_layer->neurons[ i ],2));
     }
 
     err = err / size;
@@ -40,7 +40,6 @@ void update_score( Layer * output_layer, f64 * expected, Score * score ) {
         else
             score->false_positive++;            
         }
-
 }
 
 int mpi_sync_score( Score * score, Mpi_neural_network_context * mpi_nn_context ){

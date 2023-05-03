@@ -45,28 +45,39 @@ f64 one_batch_train( Dataset * dataset, Neural_network * neural_network,
     rank = mpi_nn_context->rank;
     P    = mpi_nn_context->P;
 
+    u64 workload = mpi_nn_context->workload[rank];
 
-    u64 workload = mpi_nn_context->workload[rank]; 
+    #pragma omp parallel
+    {
 
-    for( u64 j = 0 ; j < workload ; j++ ) {
-        u64 global_batch_iteration = rank + j * P ; // global batch iteration
-        u64 local_batch_iteration = j ; // global batch iteration
-        u64 p = scheduler[ global_batch_iteration ];
+        for( u64 j = 0 ; j < workload ; j++ ) {
+            u64 global_batch_iteration = rank + j * P ; // global batch iteration
+            u64 local_batch_iteration = j ; // global batch iteration
+            u64 p = scheduler[ global_batch_iteration ];
 
+            // input and expected
+            set_input_output(neural_network, dataset->images[p].inputs,
+                            &dataset->images[p].value );
 
-        // input and expected
-        set_input_output(neural_network, dataset->images[p].inputs,
-                         &dataset->images[p].value );
-        //
-        batch_forward_propagation(neural_network, context, local_batch_iteration);
+            batch_forward_propagation(neural_network, context, local_batch_iteration);
+        
+            #pragma omp single
+            {
+                update_score( &neural_network->layers[neural_network->size - 1], 
+                        neural_network->expected, score );
+            }
+        }
 
-        update_score( &neural_network->layers[neural_network->size - 1], 
-                    neural_network->expected, score );
     }
+
     mpi_reduce_gradient( neural_network, mpi_nn_context );
   
     // if( rank == ROOT )
-    batch_backward_propagation( neural_network, context, batch_size );
+
+    #pragma omp parallel
+    {
+        batch_backward_propagation( neural_network, context, batch_size );
+    }
 
     // mpi_share_neural_network(neural_network);
 
@@ -142,7 +153,7 @@ int train(Context * context, Dataset * train_dataset,
     preprocess_dataset( test_dataset, context );
 
 
-    float training_score = 0; 
+    float training_score = 0;
     for( u64 epoch = 0; epoch < (u64) context->max_epoch /*&& training_score + context->precision < 1 */; epoch++ ){
         context->eta_ = context->eta_ * 0.97;
         shuffle(train_dataset->size, train_scheduler);

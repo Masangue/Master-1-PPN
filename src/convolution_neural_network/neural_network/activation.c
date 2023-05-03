@@ -36,11 +36,13 @@ f64 d_leaky_relu(f64 x) {
 
 //sig
 void apply_d_sigmoid( f64 * src, f64 * dst, u64 size){
+    #pragma omp for
     for( u64 i = 0; i < size; i++ ){
         dst[i] *= d_sigmoid( src[i] ) ;
     }
 }
 void apply_sigmoid( f64 * src, f64 * dst, u64 size ){
+    #pragma omp for
     for( u64 i = 0; i < size; i++ ){
         dst[i] = sigmoid( src[i]);
     }
@@ -48,11 +50,13 @@ void apply_sigmoid( f64 * src, f64 * dst, u64 size ){
 
 //relu
 void apply_d_relu( f64 * src, f64 * dst, u64 size){
+    #pragma omp for
     for( u64 i = 0; i < size; i++ ){
         dst[i] *= d_relu( src[i] ) ;
     }
 }
 void apply_relu( f64 * src, f64 * dst, u64 size ){
+    #pragma omp for
     for( u64 i = 0; i < size; i++ ){
         dst[i] = relu( src[i]);
     }
@@ -61,12 +65,14 @@ void apply_relu( f64 * src, f64 * dst, u64 size ){
 
 //l_relu
 void apply_d_leaky_relu( f64 * src, f64 * dst, u64 size){
+    #pragma omp for
     for( u64 i = 0; i < size; i++ ){
         dst[i] *= d_leaky_relu( src[i] ) ;
     }
 }
 
 void apply_leaky_relu( f64 * src, f64 * dst, u64 size ){
+    #pragma omp for
     for( u64 i = 0; i < size; i++ ){
         dst[i] = leaky_relu( src[i]);
     }

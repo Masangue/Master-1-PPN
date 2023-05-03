@@ -87,16 +87,16 @@ void compute_layer( Layer * layer1, Layer * layer2, u64 batch_iteration, activat
     u64 next_size = layer2->size;
     
     f64 s = 0.0f;
+    #pragma omp for
     for( u64 j = 0; j < next_size; j++ ){
         s = layer1->bias[j];
         for( u64 i = 0; i < size ; i++ ){
             s += layer1->neurons[ i ] * layer1->weights[ j * size + i ];
         }
-       layer2->neurons[ j ] = s;
+        layer2->neurons[ j ] = s;
     }
 
-    activation( layer2->neurons, layer2->neurons, next_size );
-     
+    activation( layer2->neurons, layer2->neurons, next_size );  
 }
 
 ////////////////////////////////////////////////////////
@@ -110,6 +110,7 @@ void compute_layer( Layer * layer1, Layer * layer2, u64 batch_iteration, activat
 f64 compute_error_gradient( Layer * layer, f64 * expected ){
     u64 size = layer->size;
     
+    #pragma omp for
     for( u64 i = 0; i < size; i++ ){
         layer->delta_neurons[ i ] =  layer->neurons[ i ] - expected[ i ]   ;
     }
@@ -122,6 +123,7 @@ void compute_gradient( Layer * layer1, Layer * layer2, activation_function_t * a
     u64 next_size = layer2->size;
 
     f64 s = 0.f;
+    #pragma omp for
     for( u64 i = 0; i < size; i++ ){
         s = 0.0;
         for( u64 j = 0; j < next_size; j++ ){
@@ -141,25 +143,31 @@ void accumulate_gradient( Layer * layer1, Layer * layer2, u64 local_batch_counte
     u64 size = layer1->size;
     u64 next_size = layer2->size;
 
+    f64 temp;
+
     if(local_batch_counter != 0){
+        #pragma omp for
         for( u64 j = 0; j < next_size; j++){
             layer1->bias_gradient_accumulator[j] += layer2->delta_neurons[j];
-
+            
             for( u64 i = 0; i < size; i++){
-                layer1->weights_gradient_accumulator[j * size + i] += 
-                            layer1->neurons[i] * layer2->delta_neurons[j];
-
+                temp = layer1->neurons[i] * layer2->delta_neurons[j];
+                #pragma omp atomic 
+                layer1->weights_gradient_accumulator[j * size + i] += temp;  
             }
         }
     }
     else{
+        #pragma omp for
         for( u64 j = 0; j < next_size; j++){
             layer1->bias_gradient_accumulator[j] = layer2->delta_neurons[j];
         
             for( u64 i = 0; i < size; i++){
-                layer1->weights_gradient_accumulator[j * size + i] = 
-                            layer1->neurons[i] * layer2->delta_neurons[j];
-        
+                temp = layer1->neurons[i] * layer2->delta_neurons[j];
+                #pragma omp critical 
+                {
+                    layer1->weights_gradient_accumulator[j * size + i] = temp;        
+                }
             }
         }
     }
@@ -172,10 +180,10 @@ void update_layer( Layer * layer1, Layer * layer2, f64 eta_, f64 alpha_, u64 bat
     
     u64 size = layer1->size;
     u64 next_size = layer2->size;
-     
+    
+    #pragma omp for
     for( u64 j = 0; j < next_size; j++){
 
-        
         layer1->bias_gradient[j] = (1.f/size) * (1.f/batch_size) * eta_ * layer1->bias_gradient_accumulator[j] 
                                         + alpha_ * layer1->bias_gradient[j];
         layer1->bias[j] -= layer1->bias_gradient[j];
