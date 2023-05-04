@@ -28,6 +28,15 @@ int mpi_share_layer( Layer * layer ){
     return 0; 
 }
 
+void sync1(){
+
+    MPI_Barrier(MPI_COMM_WORLD);
+}
+
+void sync2(){
+
+    MPI_Barrier(MPI_COMM_WORLD);
+}
 
 int mpi_reduce_gradient_layer( Layer * layer, Mpi_neural_network_context * mpi_nn_context ){
 
@@ -37,6 +46,7 @@ int mpi_reduce_gradient_layer( Layer * layer, Mpi_neural_network_context * mpi_n
     int size    = layer->size;
     int next_size    = layer->next_size;
 
+    sync1(); 
 
     // MPI_Allreduce(MPI_IN_PLACE, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)  
     MPI_Allreduce(MPI_IN_PLACE,layer->bias_gradient_accumulator,
@@ -66,6 +76,7 @@ int mpi_reduce_gradient_layer( Layer * layer, Mpi_neural_network_context * mpi_n
     //     MPI_Reduce(layer->weights_gradient_accumulator, layer->buffer, 
     //            next_size * size , MPI_DOUBLE, MPI_SUM, MASTER_RANK, MPI_COMM_WORLD);
     // }
+    sync2(); 
 
 
     return 0;

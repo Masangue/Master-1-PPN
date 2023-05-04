@@ -41,20 +41,27 @@ void free_layer( Layer * layer ){
 }
 
 
+f64 random_( f64 min, f64 max ){
+
+    f64 rdm = ( (f64)rand() / (f64)RAND_MAX) * (max - min) + min ;
+    return rdm;
+}
 //  Init a layer with random values
 void init_layer( Layer * layer ){
     u64 size = layer->size;
     u64 next_size = layer->next_size;
 
+    f64 range = sqrt(2.f / size );
+
     //
     for( u64 j = 0; j < next_size; j++ ){
-        layer->bias[j]       = ((f64) rand() / (f64)RAND_MAX) - 0.5;
+        layer->bias[j]       =  random_(-range, range);
         layer->bias_gradient[j] = 0.0f;
         layer->bias_gradient_accumulator[j] = 0.0f;
 
         //
         for( u64 i = 0; i < size ; i++ ){
-            layer->weights[j * size + i] = ((f64) rand() / (f64)RAND_MAX) - 0.5;
+            layer->weights[j * size + i] = random_(-range, range);
             layer->weights_gradient[j * size + i] = 0.0f;
             layer->weights_gradient_accumulator[j * size + i] = 0.0f;
         }   
@@ -173,6 +180,25 @@ void accumulate_gradient( Layer * layer1, Layer * layer2, u64 local_batch_counte
     }
 }
 
+f64 compute_L2_norm( Layer * layer ) {
+    u64 size = layer->size;
+    u64 next_size = layer->next_size;
+
+    f64 acc = 0.0f;
+    
+    for( u64 j = 0; j < next_size; j++){
+
+        //
+        for( u64 i = 0; i < size; i++){
+
+            acc += pow( layer->weights[ j * size + i],2 );
+            // acc +=  fabs(layer->weights[ j * size + i]) ;
+        }
+    }
+
+    return sqrt(acc);
+};
+
 
 //  Backpropagation process
 //  Changes the weights of all neurons of a layer
@@ -180,19 +206,25 @@ void update_layer( Layer * layer1, Layer * layer2, f64 eta_, f64 alpha_, u64 bat
     
     u64 size = layer1->size;
     u64 next_size = layer2->size;
+    // f64 regularization_step = 0.005 * 200 ;
+    f64 regularization_step = 0.005 ;
+    // f64 regularization_step = 0.0001;
+    f64 L2_regularization = compute_L2_norm( layer1 );
     
     #pragma omp for
     for( u64 j = 0; j < next_size; j++){
 
-        layer1->bias_gradient[j] = (1.f/size) * (1.f/batch_size) * eta_ * layer1->bias_gradient_accumulator[j] 
+        
+        layer1->bias_gradient[j] =  (1.f/batch_size) * eta_ * layer1->bias_gradient_accumulator[j] 
                                         + alpha_ * layer1->bias_gradient[j];
         layer1->bias[j] -= layer1->bias_gradient[j];
 
         //
         for( u64 i = 0; i < size; i++){
 
-            layer1->weights_gradient[j * size + i] = (1.f/size) * (1.f/batch_size) * eta_ * layer1->weights_gradient_accumulator[j * size + i] + 
-                                                  alpha_ * layer1->weights_gradient[j * size + i];
+            layer1->weights_gradient[j * size + i] =   (1.f / size ) * (1.f/batch_size) * eta_ * layer1->weights_gradient_accumulator[j * size + i] 
+                                                     +  (  eta_ * regularization_step *   L2_regularization * (1.f/(size)))
+                                                    + alpha_ * layer1->weights_gradient[j * size + i];
             layer1->weights[ j * size + i] -= layer1->weights_gradient[j * size + i];
         }
     }

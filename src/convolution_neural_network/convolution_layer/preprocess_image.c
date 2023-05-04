@@ -52,6 +52,10 @@ void  from_convolution_descriptor ( convolution_descriptor * descriptor,
         else if (descriptor->size == 5 ) { *kernel = blur_5x5;}
         else { printf("ERROR -1"); exit(0);}
         }
+    else if(strcmp(descriptor->kernel, "sobel")==0){
+        if      (descriptor->size == 3 ) { *kernel = sobel_3x3;}
+        else { printf("ERROR -1"); exit(0);}
+    }
     else if(strcmp(descriptor->kernel, "none")==0)
         {*kernel = NULL;}
     else 
