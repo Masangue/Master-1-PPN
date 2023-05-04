@@ -14,33 +14,33 @@ void log_score(FILE * fp, u64 epoch, Score * score){
 f64 stochastic_gradient_descent( Dataset * dataset, Neural_network * neural_network, Context * context, Score * score, u64 * scheduler, FILE * fp, u64 epoch, u64 is_learning ){
  
     u64 nn_size = neural_network->size;
-    
+
     init_score(score);
 
-    #pragma omp parallel
-    {
+    for( u64 np = 0 ; np < dataset->size ; np++ ) {
+        u64 p = scheduler[np];
 
-        for( u64 np = 0 ; np < dataset->size ; np++ ) {
-            u64 p = scheduler[np];
+        set_input_output(neural_network, dataset->images[p].inputs, &dataset->images[p].value );
+        
+        stochastic_forward_compute( neural_network, context );
 
-            set_input_output(neural_network, dataset->images[p].inputs, &dataset->images[p].value );
-            
-            stochastic_forward_compute( neural_network, context );
+        #pragma omp single
+        {
+            update_score(  &neural_network->layers[nn_size - 1], 
+                        neural_network->expected, score );
+        }
 
-            #pragma omp single
-            {
-                update_score(  &neural_network->layers[nn_size - 1], 
-                            neural_network->expected, score );
-            }
-
-            if( is_learning){
-                stochastic_backward_compute( neural_network, context );
-            }
+        if( is_learning){
+            stochastic_backward_compute( neural_network, context );
         }
     }
 
-    process_score( score );
-    log_score(fp, epoch, score);
+    #pragma omp single
+    {
+        process_score( score );
+        log_score(fp, epoch, score);
+    }
+
     return score->f1;
 }
 
@@ -56,37 +56,32 @@ f64 one_batch_train( Dataset * dataset, Neural_network * neural_network,
 
     u64 workload = mpi_nn_context->workload[rank];
 
-    #pragma omp parallel
-    {
+    for( u64 j = 0 ; j < workload ; j++ ) {
+        u64 global_batch_iteration = rank + j * P ; // global batch iteration
+        u64 local_batch_iteration = j ; // global batch iteration
+        u64 p = scheduler[ global_batch_iteration ];
 
-        for( u64 j = 0 ; j < workload ; j++ ) {
-            u64 global_batch_iteration = rank + j * P ; // global batch iteration
-            u64 local_batch_iteration = j ; // global batch iteration
-            u64 p = scheduler[ global_batch_iteration ];
+        // input and expected
+        set_input_output(neural_network, dataset->images[p].inputs,
+                        &dataset->images[p].value );
 
-            // input and expected
-            set_input_output(neural_network, dataset->images[p].inputs,
-                            &dataset->images[p].value );
-
-            batch_forward_propagation(neural_network, context, local_batch_iteration);
-        
-            #pragma omp single
-            {
-                update_score( &neural_network->layers[neural_network->size - 1], 
-                        neural_network->expected, score );
-            }
+        batch_forward_propagation(neural_network, context, local_batch_iteration);
+    
+        #pragma omp single
+        {
+            update_score( &neural_network->layers[neural_network->size - 1], 
+                    neural_network->expected, score );
         }
-
     }
 
-    mpi_reduce_gradient( neural_network, mpi_nn_context );
-  
+    #pragma omp single 
+    {
+        mpi_reduce_gradient( neural_network, mpi_nn_context );
+    }
+
     // if( rank == ROOT )
 
-    #pragma omp parallel
-    {
-        batch_backward_propagation( neural_network, context, batch_size );
-    }
+    batch_backward_propagation( neural_network, context, batch_size );
 
     // mpi_share_neural_network(neural_network);
 
@@ -103,7 +98,7 @@ f64 batch_gradient_descent( Dataset * dataset, Neural_network * neural_network,
     u64 dataset_size = dataset->size;
 
     init_score(score);
-   
+
     u64 number_of_complete_batch = dataset_size / batch_size;
     for( u64 i = 0 ; i < number_of_complete_batch ; i++ ) {
         // printf("BATCH NUM %llu \n", i);
@@ -119,11 +114,16 @@ f64 batch_gradient_descent( Dataset * dataset, Neural_network * neural_network,
     //     one_batch_train(dataset, neural_network, context, dataset_size % batch_size,
     //                     scheduler + number_of_complete_batch * batch_size, score);
     
-    mpi_sync_score( score, mpi_nn_context); 
-    if (mpi_nn_context->rank == MASTER_RANK) {
-        process_score( score );
-        log_score(fp, epoch, score);
+    #pragma omp single
+    {
+        mpi_sync_score( score, mpi_nn_context); 
+    
+        if (mpi_nn_context->rank == MASTER_RANK) {
+            process_score( score );
+            log_score(fp, epoch, score);
+        }
     }
+
     return score->f1;
 }
 
@@ -161,26 +161,28 @@ int train(Context * context, Dataset * train_dataset,
     preprocess_dataset( train_dataset, context );
     preprocess_dataset( test_dataset, context );
 
+    #pragma omp parallel
+    {
 
-    float training_score = 0;
-    for( u64 epoch = 0; epoch < (u64) context->max_epoch /*&& training_score + context->precision < 1 */; epoch++ ){
-        context->eta_ = context->eta_ * 0.97;
-        shuffle(train_dataset->size, train_scheduler);
+        float training_score = 0;
+        for( u64 epoch = 0; epoch < (u64) context->max_epoch /*&& training_score + context->precision < 1 */; epoch++ ){
+            context->eta_ = context->eta_ * 0.97;
+            shuffle(train_dataset->size, train_scheduler);
 
-        // if (context->batch_size > 1)
-        training_score = batch_gradient_descent( train_dataset, neural_network, 
-                                                context, &mpi_nn_context, &score, 
-                                                train_scheduler, fp_train, epoch );
-        // else
-            // training_score = stochastic_gradient_descent( train_dataset, neural_network, context, &score, train_scheduler, fp_train, epoch, 1 );
+            // if (context->batch_size > 1)
+            training_score = batch_gradient_descent( train_dataset, neural_network, 
+                                                    context, &mpi_nn_context, &score, 
+                                                    train_scheduler, fp_train, epoch );
+            // else
+                // training_score = stochastic_gradient_descent( train_dataset, neural_network, context, &score, train_scheduler, fp_train, epoch, 1 );
 
-        // Test
+            // Test
 
-        if( rank == ROOT )
-            stochastic_gradient_descent( test_dataset,  neural_network, context, 
-                                        &score, test_scheduler,  fp_test,  epoch, 0 );
-    
-        // 
+            if( rank == ROOT )
+                stochastic_gradient_descent( test_dataset,  neural_network, context, 
+                                            &score, test_scheduler,  fp_test,  epoch, 0 );
+            
+        }
     }
 
     free(test_scheduler);

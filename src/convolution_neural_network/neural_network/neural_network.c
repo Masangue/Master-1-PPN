@@ -212,15 +212,21 @@ void prepare_activation( Neural_network * neural_network, Context * context){
 
 //  Shuffles the dataset to prevents pattern redundancy
 void shuffle(u64 size, u64 * tab){
+    #pragma omp for
     for( u64 p = 0 ; p < size ; p++ ) { 
         tab[p] = p ;
     }
+    #pragma omp for
     for( u64 p = 0 ; p < size - 1 ; p++) {
         u64 np = rand() % ( size - p) + p;
             
-        u64 op = tab[p] ;
-        tab[p] = tab[np];
-        tab[np] = op;
+        u64 op = tab[p];
+
+        #pragma omp critical
+        {
+            tab[p] = tab[np];
+            tab[np] = op;
+        }
     }
 }
 
