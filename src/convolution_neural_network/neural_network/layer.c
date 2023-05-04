@@ -186,6 +186,7 @@ f64 compute_L2_norm( Layer * layer ) {
 
     f64 acc = 0.0f;
     
+    #pragma omp for
     for( u64 j = 0; j < next_size; j++){
 
         //
@@ -210,6 +211,8 @@ void update_layer( Layer * layer1, Layer * layer2, f64 eta_, f64 alpha_, u64 bat
     f64 regularization_step = 0.005 ;
     // f64 regularization_step = 0.0001;
     f64 L2_regularization = compute_L2_norm( layer1 );
+
+    #pragma omp barrier
     
     #pragma omp for
     for( u64 j = 0; j < next_size; j++){
