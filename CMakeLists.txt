@@ -14,8 +14,8 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -g -ggdb -gdwarf  -g3 -Wall -Wextra  -march=native -Ofast -mtune=native")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -g -ggdb -gdwarf  -g3 -Wall -Wextra   -march=native -Ofast -mtune=native")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -g -ggdb -gdwarf  -g3 -Wall -Wextra -fopenmp -march=native -Ofast -mtune=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -g -ggdb -gdwarf  -g3 -Wall -Wextra -fopenmp -march=native -Ofast -mtune=native")
 set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf")
 
 add_subdirectory(extern)

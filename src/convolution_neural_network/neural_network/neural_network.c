@@ -71,10 +71,12 @@ void set_input_output(Neural_network * neural_network, u8 * input, int * output 
     Layer * layer_input = &neural_network->layers[0];
     Layer * layer_output = &neural_network->layers[neural_network->size - 1];
 
-        for( u64 i = 0; i < layer_input->size; i++ ){
+    #pragma omp for
+    for( u64 i = 0; i < layer_input->size; i++ ){
         layer_input->neurons[ i ] = (f64) input[i] / 255;
     }
 
+    #pragma omp for
     for( u64 i = 0; i < layer_output->size; i++ ){
         neural_network->expected[i] = (f64) output[i] ;
     }
@@ -105,11 +107,17 @@ void stochastic_backward_compute( Neural_network * neural_network, Context * con
     compute_error_gradient( &neural_network->layers[nn_size - 1] , 
                          neural_network->expected );
 
+    #pragma omp barrier
+
     for(u64 i = nn_size - 2; i > 0; i--){
         compute_gradient( &neural_network->layers[i], &neural_network->layers[i+1],
                          neural_network->activation_d_function[i] );
+        
+        #pragma omp barrier
 
         accumulate_gradient( &neural_network->layers[i], &neural_network->layers[i+1], 0 );
+
+        #pragma omp barrier
     }
 
     for(u64 i = 0; i < nn_size - 1; i++){
@@ -131,23 +139,29 @@ void batch_forward_propagation( Neural_network * neural_network, Context * conte
 
     for(u64 i = 0; i < nn_size - 1; i++){
         compute_layer( &neural_network->layers[i], &neural_network->layers[i+1], local_batch_iteration,
-                      neural_network->activation_function[i+1] );
+                    neural_network->activation_function[i+1] );
     }
-    
+
+    #pragma omp barrier
+
     compute_error_gradient( &neural_network->layers[nn_size - 1], neural_network->expected );
     
+    #pragma omp barrier
+
     for(int i = nn_size - 2; i > 0; i--){
         compute_gradient( &neural_network->layers[i], &neural_network->layers[i+1],
-                         neural_network->activation_d_function[i] );
+                        neural_network->activation_d_function[i] );
+
+        #pragma omp barrier
 
 
         accumulate_gradient( &neural_network->layers[i], &neural_network->layers[i+1], local_batch_iteration );
 
+        #pragma omp barrier
     }
     accumulate_gradient( &neural_network->layers[0], &neural_network->layers[0+1], local_batch_iteration );
 
 }
-
 
 void batch_backward_propagation( Neural_network * neural_network, Context * context, u64 batch_size ){
     
@@ -204,15 +218,21 @@ void prepare_activation( Neural_network * neural_network, Context * context){
 
 //  Shuffles the dataset to prevents pattern redundancy
 void shuffle(u64 size, u64 * tab){
+    #pragma omp for
     for( u64 p = 0 ; p < size ; p++ ) { 
         tab[p] = p ;
     }
+    #pragma omp for
     for( u64 p = 0 ; p < size - 1 ; p++) {
         u64 np = rand() % ( size - p) + p;
             
-        u64 op = tab[p] ;
-        tab[p] = tab[np];
-        tab[np] = op;
+        u64 op = tab[p];
+
+        #pragma omp critical
+        {
+            tab[p] = tab[np];
+            tab[np] = op;
+        }
     }
 }
 
